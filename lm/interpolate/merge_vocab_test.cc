@@ -1,4 +1,5 @@
 #define BOOST_TEST_MODULE InterpolateMergeVocabTest
+#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 #include "../enumerate_vocab.hh"

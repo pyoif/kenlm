@@ -1,6 +1,7 @@
 #include "multi_intersection.hh"
 
 #define BOOST_TEST_MODULE MultiIntersectionTest
+#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace util {

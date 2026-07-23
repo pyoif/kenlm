@@ -1,6 +1,7 @@
 #include "joint_sort.hh"
 
 #define BOOST_TEST_MODULE JointSortTest
+#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace util { namespace {

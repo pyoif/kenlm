@@ -8,6 +8,7 @@
 #include "../../util/stream/typed_stream.hh"
 
 #define BOOST_TEST_MODULE DerivativeTest
+#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace lm { namespace interpolate {

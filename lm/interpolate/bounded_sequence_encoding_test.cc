@@ -3,6 +3,7 @@
 #include "../../util/scoped.hh"
 
 #define BOOST_TEST_MODULE BoundedSequenceEncodingTest
+#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace lm {

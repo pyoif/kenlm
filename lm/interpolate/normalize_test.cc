@@ -7,6 +7,7 @@
 #include "../../util/stream/multi_stream.hh"
 
 #define BOOST_TEST_MODULE NormalizeTest
+#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace lm { namespace interpolate { namespace {

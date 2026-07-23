@@ -6,6 +6,7 @@
 
 #include <boost/thread/thread.hpp>
 #define BOOST_TEST_MODULE AdjustCounts
+#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace lm { namespace builder { namespace {

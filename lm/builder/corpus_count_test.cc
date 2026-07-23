@@ -11,6 +11,7 @@
 #include "../../util/stream/stream.hh"
 
 #define BOOST_TEST_MODULE CorpusCountTest
+#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace lm { namespace builder { namespace {
