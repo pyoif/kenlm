@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
+# CMake >= 4.0 removed FindBoost. Policy CMP0167=OLD restores it.
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
+
 if (WIN32)
     set(Boost_USE_STATIC_LIBS OFF)
     # The auto-linking feature has problems with USE_STATIC_LIBS off, so we use
@@ -22,7 +27,7 @@ option(COMPILE_TESTS "Compile tests" OFF)
 option(ENABLE_PYTHON "Build Python bindings" OFF)
 option(BUILD_PYTHON_STANDALONE "Build standalone C++ lib with Python install" OFF)
 # Eigen3 less than 3.1.0 has a race condition: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=466
-find_package(Eigen3 3.1.0 CONFIG)
+find_package(Eigen3 3.0 CONFIG)
 include(CMakeDependentOption)
 cmake_dependent_option(ENABLE_INTERPOLATE "Build interpolation program (depends on Eigen3)" ON "EIGEN3_FOUND AND NOT WIN32" OFF)
 
@@ -98,6 +103,9 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
 # We need boost
+# Force FindBoost module mode: CMake >=4.0 removed the module (restored via CMP0167),
+# but config mode (Homebrew) fails on header-only components (system, thread).
+set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "Avoid Boost config mode for header-only components")
 find_package(Boost 1.41.0 REQUIRED COMPONENTS
   program_options
   system
