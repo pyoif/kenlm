@@ -5,8 +5,9 @@
 #include "../max_order.hh"
 #include "../../util/string_piece.hh"
 
-#include <boost/thread/tss.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <memory>
+#include <mutex>
+#include <thread>
 
 /* Wrapper to NPLM "by Ashish Vaswani, with contributions from David Chiang
  * and Victoria Fossum."
@@ -68,9 +69,10 @@ class Model : public lm::base::ModelFacade<Model, State, Vocabulary> {
     FullScoreReturn FullScoreForgotState(const WordIndex *context_rbegin, const WordIndex *context_rend, const WordIndex new_word, State &out_state) const;
 
   private:
-    boost::scoped_ptr<nplm::neuralLM> base_instance_;
+    std::unique_ptr<nplm::neuralLM> base_instance_;
 
-    mutable boost::thread_specific_ptr<Backend> backend_;
+    mutable std::thread::id last_thread_id_;
+    mutable Backend *backend_cache_;
 
     Vocabulary vocab_;
 

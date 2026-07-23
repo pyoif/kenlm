@@ -61,7 +61,7 @@ nplm::neuralLM *LoadNPLM(const std::string &file) {
 } // namespace
 
 Model::Model(const std::string &file, std::size_t cache)
-  : base_instance_(LoadNPLM(file)), vocab_(base_instance_->get_vocabulary()), cache_size_(cache) {
+  : base_instance_(LoadNPLM(file)), vocab_(base_instance_->get_vocabulary()), backend_cache_(nullptr), cache_size_(cache) {
   UTIL_THROW_IF(base_instance_->get_order() > NPLM_MAX_ORDER, util::Exception, "This NPLM has order " << (unsigned int)base_instance_->get_order() << " but the KenLM wrapper was compiled with " << NPLM_MAX_ORDER << ".  Change the defintion of NPLM_MAX_ORDER and recompile.");
   // log10 compatible with backoff models.
   base_instance_->set_log_base(10.0);
@@ -76,10 +76,16 @@ Model::Model(const std::string &file, std::size_t cache)
 Model::~Model() {}
 
 FullScoreReturn Model::FullScore(const State &from, const WordIndex new_word, State &out_state) const {
-  Backend *backend = backend_.get();
+  auto tid = std::this_thread::get_id();
+  if (last_thread_id_ != tid) {
+    last_thread_id_ = tid;
+    delete backend_cache_;
+    backend_cache_ = nullptr;
+  }
+  Backend *backend = backend_cache_;
   if (!backend) {
     backend = new Backend(*base_instance_, cache_size_);
-    backend_.reset(backend);
+    backend_cache_ = backend;
   }
   // State is in natural word order.
   FullScoreReturn ret;

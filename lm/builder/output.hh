@@ -5,8 +5,8 @@
 #include "../common/model_buffer.hh"
 #include "../../util/file.hh"
 
-#include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/utility.hpp>
+#include <memory>
+#include <vector>
 
 namespace util { namespace stream { class Chains; class ChainPositions; } }
 
@@ -35,13 +35,15 @@ class OutputHook {
     HookType type_;
 };
 
-class Output : boost::noncopyable {
+class Output {
   public:
     Output(StringPiece file_base, bool keep_buffer, bool output_q);
+    Output(const Output&) = delete;
+    Output& operator=(const Output&) = delete;
 
     // Takes ownership.
     void Add(OutputHook *hook) {
-      outputs_[hook->Type()].push_back(hook);
+      outputs_[hook->Type()].emplace_back(hook);
     }
 
     bool Have(HookType hook_type) const {
@@ -63,7 +65,7 @@ class Output : boost::noncopyable {
 
     ModelBuffer buffer_;
 
-    boost::ptr_vector<OutputHook> outputs_[NUMBER_OF_HOOKS];
+    std::vector<std::unique_ptr<OutputHook>> outputs_[NUMBER_OF_HOOKS];
     HeaderInfo header_;
 };
 

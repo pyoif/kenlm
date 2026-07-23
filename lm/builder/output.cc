@@ -34,7 +34,7 @@ void Output::SinkProbs(util::stream::Chains &chains) {
 }
 
 void Output::Apply(HookType hook_type, util::stream::Chains &chains) {
-  for (boost::ptr_vector<OutputHook>::iterator entry = outputs_[hook_type].begin(); entry != outputs_[hook_type].end(); ++entry) {
+  for (auto &entry : outputs_[hook_type]) {
     entry->Sink(header_, VocabFile(), chains);
   }
 }

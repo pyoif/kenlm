@@ -37,7 +37,7 @@ void ParallelRead(int fd, void *to, std::size_t amount, uint64_t offset) {
   poison.to = NULL;
   poison.size = 0;
   poison.offset = 0;
-  unsigned threads = boost::thread::hardware_concurrency();
+  unsigned threads = std::thread::hardware_concurrency();
   if (!threads) threads = 2;
   ThreadPool<Reader> pool(2 /* don't need much of a queue */, threads, fd, poison);
   const std::size_t kBatch = 1ULL << 25; // 32 MB
