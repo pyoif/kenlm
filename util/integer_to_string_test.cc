@@ -4,6 +4,8 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
+#include <cctype>
+#include <cstdint>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -26,6 +28,32 @@ template <class T> void TestValue(const T value) {
     std::string got(result.data(), result.size());
     bool match = (expected == got);
     CHECK(match);
+  } else {
+    bool is_zero = (result == "0x0") || (result == "0");
+    CHECK(is_zero);
+  }
+}
+
+template <> void TestValue<const void*>(const void* value) {
+  char buf[ToStringBuf<const void*>::kBytes];
+  StringPiece result(buf, ToString(value, buf) - buf);
+  REQUIRE_GE(static_cast<std::size_t>(ToStringBuf<const void*>::kBytes), result.size());
+  if (value) {
+    std::string expected = ToStr(value);
+    std::string got(result.data(), result.size());
+    // MSVC ostream << void*: zero-padded uppercase hex without 0x (e.g. "0000000000000001")
+    // ToString: 0x + lowercase hex without padding (e.g. "0x1")
+    // Normalize both: lowercase, strip 0x from got, strip leading zeros from expected.
+    std::string expected_norm = expected;
+    std::string got_norm = got;
+    for (char &c : expected_norm) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    for (char &c : got_norm) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    if (got_norm.size() >= 2 && got_norm[0] == '0' && got_norm[1] == 'x')
+      got_norm = got_norm.substr(2);
+    size_t pos = expected_norm.find_first_not_of('0');
+    if (pos != std::string::npos)
+      expected_norm = expected_norm.substr(pos);
+    CHECK(expected_norm == got_norm);
   } else {
     bool is_zero = (result == "0x0") || (result == "0");
     CHECK(is_zero);

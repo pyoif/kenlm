@@ -19,7 +19,7 @@
 inline int mkstemp(char * stemplate) {
     char *filename = _mktemp(stemplate);
     if (filename == NULL) return -1;
-    return _open(filename, _O_RDWR | _O_CREAT, 0600);
+    return _open(filename, _O_BINARY | _O_RDWR | _O_CREAT, 0600);
 }
 #endif
 #endif
@@ -113,7 +113,7 @@ TEST_CASE("ReadXZ") {
 
 TEST_CASE("IStream") {
   std::string name(WriteRandom());
-  std::fstream stream(name.c_str(), std::ios::in);
+  std::fstream stream(name.c_str(), std::ios::in | std::ios::binary);
   ReadCompressed reader(stream);
   VerifyRead(reader);
 }

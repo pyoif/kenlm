@@ -258,7 +258,6 @@ void BinaryFormat::FinishFile(const Config &config, ModelType model_type, unsign
   }
   // header and vocab share the same mmap.
   Parameters params = Parameters();
-  memset(&params, 0, sizeof(Parameters));
   params.counts = counts;
   params.fixed.order = counts.size();
   params.fixed.probing_multiplier = config.probing_multiplier;

@@ -45,13 +45,13 @@ TEST_CASE("FromShuffled") {
 
   ChainConfig config;
   config.entry_size = 8;
-  config.total_memory = 800;
+  config.total_memory = 80000;
   config.block_count = 3;
 
   SortConfig merge_config;
   merge_config.temp_prefix = "sort_test_temp";
-  merge_config.buffer_size = 800;
-  merge_config.total_memory = 3300;
+  merge_config.buffer_size = 80000;
+  merge_config.total_memory = 640000;
 
   Chain chain(config);
   chain >> Putter(shuffled);

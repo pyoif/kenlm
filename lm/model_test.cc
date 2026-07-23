@@ -3,6 +3,12 @@
 #include <cstdlib>
 #include <cstring>
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
 #include <doctest/doctest.h>
 #include "../util/test_main.hh"
 

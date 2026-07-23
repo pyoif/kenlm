@@ -37,7 +37,10 @@ ModelBuffer::ModelBuffer(StringPiece file_base)
   while ((got = in.get()) == ' ') {
     counts_.push_back(in.ReadULong());
   }
-  UTIL_THROW_IF2(got != '\n', "Expected newline at end of counts.");
+  UTIL_THROW_IF2(got != '\n' && got != '\r', "Expected newline at end of counts.");
+  if (got == '\r') {
+    got = in.get(); // consume \n after \r
+  }
 
   token = in.ReadDelimited();
   UTIL_THROW_IF2(token != "Payload", "Expected Payload, got \"" << token << "\" in " << full_name);
