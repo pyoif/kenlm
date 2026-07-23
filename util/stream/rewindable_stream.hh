@@ -21,7 +21,7 @@ class RewindableStream {
      * Creates an uninitialized RewindableStream. You **must** call Init()
      * on it later!
      */
-    RewindableStream() : in_(NULL), entry_size_(0), block_size_(0), block_count_(0), marked_(NULL), current_(NULL), block_end_(NULL), hit_poison_(false), poisoned_(false) {}
+    RewindableStream() : in_(NULL), entry_size_(0), block_size_(0), block_count_(0), marked_(NULL), current_(NULL), block_end_(NULL), hit_poison_(false), poisoned_(true) {}
     RewindableStream(const RewindableStream&) = delete;
     RewindableStream& operator=(const RewindableStream&) = delete;
 
