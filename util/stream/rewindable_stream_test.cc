@@ -4,7 +4,7 @@
 #include "../file.hh"
 
 #define BOOST_TEST_MODULE RewindableStreamTest
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 namespace util {
 namespace stream {

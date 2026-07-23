@@ -1,7 +1,7 @@
 #include "bit_packing.hh"
 
 #define BOOST_TEST_MODULE BitPackingTest
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <cstring>
 

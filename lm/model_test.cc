@@ -4,7 +4,7 @@
 #include <cstring>
 
 #define BOOST_TEST_MODULE ModelTest
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
 // Apparently some Boost versions use templates and are pretty strict about types matching.

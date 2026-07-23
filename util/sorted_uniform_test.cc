@@ -7,7 +7,7 @@
 #include <boost/unordered_map.hpp>
 
 #define BOOST_TEST_MODULE SortedUniformTest
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <limits>

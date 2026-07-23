@@ -8,7 +8,7 @@
 #include "../../util/string_piece.hh"
 
 #define BOOST_TEST_MODULE InstanceTest
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <vector>
 

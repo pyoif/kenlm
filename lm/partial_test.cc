@@ -5,7 +5,7 @@
 #include "../util/tokenize_piece.hh"
 
 #define BOOST_TEST_MODULE PartialTest
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
 namespace lm {

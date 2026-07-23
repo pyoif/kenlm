@@ -4,7 +4,7 @@
 #include "have.hh"
 
 #define BOOST_TEST_MODULE ReadCompressedTest
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/scoped_ptr.hpp>
 
 #include <fstream>

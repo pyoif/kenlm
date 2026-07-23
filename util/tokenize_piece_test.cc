@@ -2,7 +2,7 @@
 #include "string_piece.hh"
 
 #define BOOST_TEST_MODULE TokenIteratorTest
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <iostream>
 
