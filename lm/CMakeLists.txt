@@ -67,8 +67,8 @@ AddExes(EXES ${EXE_LIST}
 
 if(BUILD_TESTING)
 
-  set(KENLM_BOOST_TESTS_LIST left_test partial_test)
-  AddTests(TESTS ${KENLM_BOOST_TESTS_LIST}
+  set(KENLM_TESTS_LIST left_test partial_test)
+  AddTests(TESTS ${KENLM_TESTS_LIST}
            LIBRARIES ${LM_LIBS}
            TEST_ARGS ${CMAKE_CURRENT_SOURCE_DIR}/test.arpa)
 

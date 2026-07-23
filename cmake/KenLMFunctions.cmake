@@ -39,18 +39,11 @@ function(KenLMAddTest)
                  ${KenLMAddTest_TEST}.cc
                  ${KenLMAddTest_DEPENDS})
 
-  if (Boost_USE_STATIC_LIBS)
-    set(DYNLINK_FLAGS)
-  else()
-    set(DYNLINK_FLAGS COMPILE_FLAGS -DBOOST_TEST_DYN_LINK)
-  endif()
-
   # Require the following compile flag
   set_target_properties(${KenLMAddTest_TEST} PROPERTIES
-                        ${DYNLINK_FLAGS}
                         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
 
-  target_link_libraries(${KenLMAddTest_TEST} ${KenLMAddTest_LIBRARIES} ${TIMER_LINK})
+  target_link_libraries(${KenLMAddTest_TEST} ${KenLMAddTest_LIBRARIES} ${TIMER_LINK} kenlm_doctest)
 
   set(test_params "")
   if(KenLMAddTest_TEST_ARGS)
@@ -71,7 +64,7 @@ function(AddTests)
   set(multiValueArgs TESTS DEPENDS LIBRARIES TEST_ARGS)
   cmake_parse_arguments(AddTests "" "" "${multiValueArgs}" ${ARGN})
 
-  # Iterate through the Boost tests list
+  # Iterate through the tests list
   foreach(test ${AddTests_TESTS})
     KenLMAddTest(TEST ${test}
                  DEPENDS ${AddTests_DEPENDS}

@@ -26,14 +26,14 @@ set(KENLM_UTIL_STREAM_SOURCE
 
 
 if(BUILD_TESTING)
-  # Explicitly list the Boost test files to be compiled
-  set(KENLM_BOOST_TESTS_LIST
+  # Explicitly list the test files to be compiled
+  set(KENLM_TESTS_LIST
     io_test
     sort_test
     stream_test
     rewindable_stream_test
   )
 
-  AddTests(TESTS ${KENLM_BOOST_TESTS_LIST}
-           LIBRARIES kenlm_util ${Boost_LIBRARIES} Threads::Threads)
+  AddTests(TESTS ${KENLM_TESTS_LIST}
+           LIBRARIES kenlm_util Threads::Threads)
 endif()

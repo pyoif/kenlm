@@ -83,9 +83,6 @@ endif()
 # Group these objects together for later use.
 set_target_properties(kenlm_util PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(kenlm_util
-  PUBLIC
-  # Boost is required for building binaries and tests
-  "$<BUILD_INTERFACE:${Boost_LIBRARIES}>"
   PRIVATE
   Threads::Threads
   ${RT})
@@ -106,7 +103,7 @@ endif()
 
 # Only compile and run unit tests if tests should be run
 if(BUILD_TESTING)
-  set(KENLM_BOOST_TESTS_LIST
+  set(KENLM_TESTS_LIST
     bit_packing_test
     integer_to_string_test
     joint_sort_test
@@ -120,7 +117,7 @@ if(BUILD_TESTING)
     tokenize_piece_test
   )
 
-  AddTests(TESTS ${KENLM_BOOST_TESTS_LIST}
+  AddTests(TESTS ${KENLM_TESTS_LIST}
            LIBRARIES kenlm_util Threads::Threads)
 
   # file_piece_test requires an extra command line parameter

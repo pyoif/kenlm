@@ -48,12 +48,12 @@ install(
       
 if(BUILD_TESTING)
 
-  # Explicitly list the Boost test files to be compiled
-  set(KENLM_BOOST_TESTS_LIST
+  # Explicitly list the test files to be compiled
+  set(KENLM_TESTS_LIST
     adjust_counts_test
     corpus_count_test
   )
 
-  AddTests(TESTS ${KENLM_BOOST_TESTS_LIST}
+  AddTests(TESTS ${KENLM_TESTS_LIST}
            LIBRARIES kenlm_builder kenlm kenlm_util Threads::Threads)
 endif()
