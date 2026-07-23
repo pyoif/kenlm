@@ -71,9 +71,6 @@ class Model : public lm::base::ModelFacade<Model, State, Vocabulary> {
   private:
     std::unique_ptr<nplm::neuralLM> base_instance_;
 
-    mutable std::thread::id last_thread_id_;
-    mutable Backend *backend_cache_;
-
     Vocabulary vocab_;
 
     lm::WordIndex null_word_;

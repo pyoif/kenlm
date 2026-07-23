@@ -76,13 +76,11 @@ Model::Model(const std::string &file, std::size_t cache)
 Model::~Model() { delete backend_cache_; }
 
 FullScoreReturn Model::FullScore(const State &from, const WordIndex new_word, State &out_state) const {
-  auto tid = std::this_thread::get_id();
-  if (last_thread_id_ != tid || !backend_cache_) {
-    last_thread_id_ = tid;
-    delete backend_cache_;
-    backend_cache_ = new Backend(*base_instance_, cache_size_);
+  static thread_local Backend *backend_cache = nullptr;
+  if (!backend_cache) {
+    backend_cache = new Backend(*base_instance_, cache_size_);
   }
-  Backend *backend = backend_cache_;
+  Backend *backend = backend_cache;
   // State is in natural word order.
   FullScoreReturn ret;
   for (int i = 0; i < backend->order() - 1; ++i) {
