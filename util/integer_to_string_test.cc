@@ -27,13 +27,13 @@ template <class T> void TestValue(const T value) {
   StringPiece result(buf, ToString(value, buf) - buf);
   REQUIRE_GE(static_cast<std::size_t>(ToStringBuf<T>::kBytes), result.size());
   if (value) {
-    auto _s = Stringify(value);
-    do {
-      CHECK_EQ(_s.size(), result.size());
-      CHECK_EQ(0, std::memcmp(_s.data(), result.data(), result.size()));
-    } while(0);
+    std::string ref = Stringify(value);
+    std::string got(result.data(), result.size());
+    if (ref != got) FAIL_CHECK("ToString mismatch: expected " << ref << " got " << got);
+  } else {
     // Platforms can do void * as 0x0 or 0.
-    CHECK(result == "0x0" || result == "0");
+    bool is_zero = (result == "0x0") || (result == "0");
+    CHECK(is_zero);
   }
 }
 

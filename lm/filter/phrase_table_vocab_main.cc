@@ -22,16 +22,18 @@ struct MutablePiece {
   }
 };
 
-std::size_t hash_value(const MutablePiece &m) {
-  return hash_value(m.behind);
-}
+struct MutablePieceHash {
+  std::size_t operator()(const MutablePiece &m) const {
+    return hash_value(m.behind);
+  }
+};
 
 class InternString {
   public:
     const char *Add(StringPiece str) {
       MutablePiece mut;
       mut.behind = str;
-      std::pair<std::unordered_set<MutablePiece>::iterator, bool> res(strs_.insert(mut));
+      std::pair<std::unordered_set<MutablePiece, MutablePieceHash>::iterator, bool> res(strs_.insert(mut));
       if (res.second) {
         void *mem = backing_.Allocate(str.size() + 1);
         memcpy(mem, str.data(), str.size());
@@ -43,7 +45,7 @@ class InternString {
 
   private:
     util::Pool backing_;
-    std::unordered_set<MutablePiece> strs_;
+    std::unordered_set<MutablePiece, MutablePieceHash> strs_;
 };
 
 class TargetWords {
