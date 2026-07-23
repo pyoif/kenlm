@@ -10,18 +10,18 @@
 #include "../../util/stream/chain.hh"
 #include "../../util/stream/stream.hh"
 
-#define BOOST_TEST_MODULE CorpusCountTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace lm { namespace builder { namespace {
 
 #define Check(str, cnt) { \
-  BOOST_REQUIRE(stream); \
+  REQUIRE(stream); \
   w = stream->begin(); \
   for (util::TokenIter<util::AnyCharacter, true> t(str, " "); t; ++t, ++w) { \
-    BOOST_CHECK_EQUAL(*t, v[*w]); \
+    CHECK_EQ(*t, v[*w]); \
   } \
-  BOOST_CHECK_EQUAL((uint64_t)cnt, stream->Value().count); \
+  CHECK_EQ((uint64_t)cnt, stream->Value().count); \
   ++stream; \
 }
 
@@ -49,11 +49,11 @@ class CheckAnswers {
       Check("<s> <s> bar", 1);
       Check("<s> bar </s>", 1);
       Check("<s> <s> </s>", 1);
-      BOOST_CHECK(!stream);
+      CHECK(!stream);
     }
 };
 
-BOOST_AUTO_TEST_CASE(Short) {
+TEST_CASE("Short") {
   util::scoped_fd input_file(util::MakeTemp("corpus_count_test_temp"));
   const char input[] = "looking on a little more loin\non a little more loin\non foo little more loin\nbar\n\n";
   // Blocks of 10 are
@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(Short) {
   std::vector<bool> prune_words;
   util::stream::Chain chain(config);
   CorpusCount counter(input_piece, vocab.get(), true, token_count, type_count, prune_words, "", chain.BlockSize() / chain.EntrySize(), SILENT);
-  chain >> boost::ref(counter) >> CheckAnswers() >> util::stream::kRecycle;
+  chain >> std::ref(counter) >> CheckAnswers() >> util::stream::kRecycle;
 
   chain.Wait();
-  BOOST_CHECK_EQUAL(11, type_count);
+  CHECK_EQ(11, type_count);
 }
 
 }}} // namespaces

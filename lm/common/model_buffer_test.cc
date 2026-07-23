@@ -2,16 +2,15 @@
 #include "../model.hh"
 #include "../state.hh"
 
-#define BOOST_TEST_MODULE ModelBufferTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+
+#define CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(ref) == doctest::Approx(static_cast<double>(value)).epsilon(static_cast<double>(tol) / 100.0))
 
 namespace lm { namespace {
 
-BOOST_AUTO_TEST_CASE(Query) {
+TEST_CASE("Query") {
   std::string dir("test_data");
-  if (boost::unit_test::framework::master_test_suite().argc == 2) {
-    dir = boost::unit_test::framework::master_test_suite().argv[1];
-  }
   ngram::Model ref((dir + "/toy0.arpa").c_str());
 #if BYTE_ORDER == LITTLE_ENDIAN
   std::string endian = "little";
@@ -24,25 +23,25 @@ BOOST_AUTO_TEST_CASE(Query) {
   ModelBuffer test(dir + "/" + endian + "endian/toy0");
   ngram::State ref_state, test_state;
   WordIndex a = ref.GetVocabulary().Index("a");
-  BOOST_CHECK_CLOSE(
+  CHECK_CLOSE(
       ref.FullScore(ref.BeginSentenceState(), a, ref_state).prob,
       test.SlowQuery(ref.BeginSentenceState(), a, test_state),
       0.001);
-  BOOST_CHECK_EQUAL((unsigned)ref_state.length, (unsigned)test_state.length);
-  BOOST_CHECK_EQUAL(ref_state.words[0], test_state.words[0]);
-  BOOST_CHECK_EQUAL(ref_state.backoff[0], test_state.backoff[0]);
-  BOOST_CHECK(ref_state == test_state);
+  CHECK_EQ((unsigned)ref_state.length, (unsigned)test_state.length);
+  CHECK_EQ(ref_state.words[0], test_state.words[0]);
+  CHECK_EQ(ref_state.backoff[0], test_state.backoff[0]);
+  CHECK(ref_state == test_state);
 
   ngram::State ref_state2, test_state2;
   WordIndex b = ref.GetVocabulary().Index("b");
-  BOOST_CHECK_CLOSE(
+  CHECK_CLOSE(
       ref.FullScore(ref_state, b, ref_state2).prob,
       test.SlowQuery(test_state, b, test_state2),
       0.001);
-  BOOST_CHECK(ref_state2 == test_state2);
-  BOOST_CHECK_EQUAL(ref_state2.backoff[0], test_state2.backoff[0]);
+  CHECK(ref_state2 == test_state2);
+  CHECK_EQ(ref_state2.backoff[0], test_state2.backoff[0]);
 
-  BOOST_CHECK_CLOSE(
+  CHECK_CLOSE(
       ref.FullScore(ref_state2, 0, ref_state).prob,
       test.SlowQuery(test_state2, 0, test_state),
       0.001);

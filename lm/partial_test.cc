@@ -4,9 +4,11 @@
 #include "model.hh"
 #include "../util/tokenize_piece.hh"
 
-#define BOOST_TEST_MODULE PartialTest
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+
+#define CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(ref) == doctest::Approx(static_cast<double>(value)).epsilon(static_cast<double>(tol) / 100.0))
+
 
 namespace lm {
 namespace ngram {
@@ -34,7 +36,7 @@ struct ModelFixture {
 
 BOOST_FIXTURE_TEST_SUITE(suite, ModelFixture)
 
-BOOST_AUTO_TEST_CASE(SimpleBefore) {
+TEST_CASE("SimpleBefore") {
   Left left;
   left.full = false;
   left.length = 0;
@@ -47,28 +49,28 @@ BOOST_AUTO_TEST_CASE(SimpleBefore) {
   reveal.words[0] = period;
   reveal.backoff[0] = -0.845098;
 
-  BOOST_CHECK_CLOSE(0.0, RevealBefore(m, reveal, 0, false, left, right), 0.001);
-  BOOST_CHECK_EQUAL(0, left.length);
-  BOOST_CHECK(!left.full);
-  BOOST_CHECK_EQUAL(1, right.length);
-  BOOST_CHECK_EQUAL(period, right.words[0]);
-  BOOST_CHECK_CLOSE(-0.845098, right.backoff[0], 0.001);
+  CHECK_CLOSE(0.0, RevealBefore(m, reveal, 0, false, left, right), 0.001);
+  CHECK_EQ(0, left.length);
+  CHECK(!left.full);
+  CHECK_EQ(1, right.length);
+  CHECK_EQ(period, right.words[0]);
+  CHECK_CLOSE(-0.845098, right.backoff[0], 0.001);
 
   WordIndex more = m.GetVocabulary().Index("more");
   reveal.words[1] = more;
   reveal.backoff[1] =  -0.4771212;
   reveal.length = 2;
-  BOOST_CHECK_CLOSE(0.0, RevealBefore(m, reveal, 1, false, left, right), 0.001);
-  BOOST_CHECK_EQUAL(0, left.length);
-  BOOST_CHECK(!left.full);
-  BOOST_CHECK_EQUAL(2, right.length);
-  BOOST_CHECK_EQUAL(period, right.words[0]);
-  BOOST_CHECK_EQUAL(more, right.words[1]);
-  BOOST_CHECK_CLOSE(-0.845098, right.backoff[0], 0.001);
-  BOOST_CHECK_CLOSE(-0.4771212, right.backoff[1], 0.001);
+  CHECK_CLOSE(0.0, RevealBefore(m, reveal, 1, false, left, right), 0.001);
+  CHECK_EQ(0, left.length);
+  CHECK(!left.full);
+  CHECK_EQ(2, right.length);
+  CHECK_EQ(period, right.words[0]);
+  CHECK_EQ(more, right.words[1]);
+  CHECK_CLOSE(-0.845098, right.backoff[0], 0.001);
+  CHECK_CLOSE(-0.4771212, right.backoff[1], 0.001);
 }
 
-BOOST_AUTO_TEST_CASE(AlsoWouldConsider) {
+TEST_CASE("AlsoWouldConsider") {
   WordIndex would = m.GetVocabulary().Index("would");
   WordIndex consider = m.GetVocabulary().Index("consider");
 
@@ -86,11 +88,11 @@ BOOST_AUTO_TEST_CASE(AlsoWouldConsider) {
   after.pointers[0] = consider;
 
   // adjustment for would consider
-  BOOST_CHECK_CLOSE(-1.687872 - -0.2922095 - 0.30103, RevealAfter(m, current.left, current.right, after, 0), 0.001);
+  CHECK_CLOSE(-1.687872 - -0.2922095 - 0.30103, RevealAfter(m, current.left, current.right, after, 0), 0.001);
 
-  BOOST_CHECK_EQUAL(2, current.left.length);
-  BOOST_CHECK_EQUAL(would, current.left.pointers[0]);
-  BOOST_CHECK_EQUAL(false, current.left.full);
+  CHECK_EQ(2, current.left.length);
+  CHECK_EQ(would, current.left.pointers[0]);
+  CHECK_EQ(false, current.left.full);
 
   WordIndex also = m.GetVocabulary().Index("also");
   Right before;
@@ -99,15 +101,15 @@ BOOST_AUTO_TEST_CASE(AlsoWouldConsider) {
   before.backoff[0] = -0.30103;
   // r(would) = -0.2922095 [i would], r(would -> consider) = -1.988902 [b(would) + p(consider)]
   // p(also -> would) = -2, p(also would -> consider) = -3
-  BOOST_CHECK_CLOSE(-2 + 0.2922095 -3 + 1.988902, RevealBefore(m, before, 0, false, current.left, current.right), 0.001);
-  BOOST_CHECK_EQUAL(0, current.left.length);
-  BOOST_CHECK(current.left.full);
-  BOOST_CHECK_EQUAL(2, current.right.length);
-  BOOST_CHECK_EQUAL(would, current.right.words[0]);
-  BOOST_CHECK_EQUAL(also, current.right.words[1]);
+  CHECK_CLOSE(-2 + 0.2922095 -3 + 1.988902, RevealBefore(m, before, 0, false, current.left, current.right), 0.001);
+  CHECK_EQ(0, current.left.length);
+  CHECK(current.left.full);
+  CHECK_EQ(2, current.right.length);
+  CHECK_EQ(would, current.right.words[0]);
+  CHECK_EQ(also, current.right.words[1]);
 }
 
-BOOST_AUTO_TEST_CASE(EndSentence) {
+TEST_CASE("EndSentence") {
   WordIndex loin = m.GetVocabulary().Index("loin");
   WordIndex period = m.GetVocabulary().Index(".");
   WordIndex eos = m.GetVocabulary().EndSentence();
@@ -125,8 +127,8 @@ BOOST_AUTO_TEST_CASE(EndSentence) {
   before.backoff[1] = 0.0;
 
   before.length = 1;
-  BOOST_CHECK_CLOSE(-0.0410707, RevealBefore(m, before, 0, true, between.left, between.right), 0.001);
-  BOOST_CHECK_EQUAL(0, between.left.length);
+  CHECK_CLOSE(-0.0410707, RevealBefore(m, before, 0, true, between.left, between.right), 0.001);
+  CHECK_EQ(0, between.left.length);
 }
 
 float ScoreFragment(const RestProbingModel &model, unsigned int *begin, unsigned int *end, ChartState &out) {
@@ -159,8 +161,8 @@ void CheckAdjustment(const RestProbingModel &model, float expect, const Right &b
   if (before_full) {
     got += RevealBefore(model, before, before.length, true, between.left, between.right);
   }
-  // Sometimes they're zero and BOOST_CHECK_CLOSE fails for this.
-  BOOST_CHECK(fabs(expect - got) < 0.001);
+  // Sometimes they're zero and CHECK_CLOSE fails for this.
+  CHECK(fabs(expect - got) < 0.001);
 }
 
 void FullDivide(const RestProbingModel &model, StringPiece str) {
@@ -187,7 +189,7 @@ void FullDivide(const RestProbingModel &model, StringPiece str) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(Strings) {
+TEST_CASE("Strings") {
   FullDivide(m, "also would consider");
   FullDivide(m, "looking on a little more loin . </s>");
   FullDivide(m, "in biarritz watching considering looking . on a little more loin also would consider higher to look good unknown the screening foo bar , unknown however unknown </s>");

@@ -228,7 +228,7 @@ util::stream::Sort<SuffixOrder, CombineCounts> *CountText(int text_file /* input
   util::FilePiece text(text_file, NULL, &std::cerr);
   text_file_name = text.FileName();
   CorpusCount counter(text, vocab_file, true, token_count, type_count, prune_words, config.prune_vocab_file, chain.BlockSize() / chain.EntrySize(), config.disallowed_symbol_action);
-  chain >> boost::ref(counter);
+  chain >> std::ref(counter);
 
   util::scoped_ptr<util::stream::Sort<SuffixOrder, CombineCounts> > sorter(new util::stream::Sort<SuffixOrder, CombineCounts>(chain, config.sort, SuffixOrder(config.order), CombineCounts()));
   chain.Wait(true);

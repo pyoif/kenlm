@@ -5,19 +5,19 @@
 
 #include <vector>
 
-#define BOOST_TEST_MODULE LeftTest
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+
 
 namespace lm {
 namespace ngram {
 namespace {
 
 #define Term(word) score.Terminal(m.GetVocabulary().Index(word));
-#define VCheck(word, value) BOOST_CHECK_EQUAL(m.GetVocabulary().Index(word), value);
+#define VCheck(word, value) CHECK_EQ(m.GetVocabulary().Index(word), value);
 
 // Apparently some Boost versions use templates and are pretty strict about types matching.
-#define SLOPPY_CHECK_CLOSE(ref, value, tol) BOOST_CHECK_CLOSE(static_cast<double>(ref), static_cast<double>(value), static_cast<double>(tol));
+#define SLOPPY_CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(ref) == doctest::Approx(static_cast<double>(value)).epsilon(static_cast<double>(tol) / 100.0));
 
 template <class M> void Short(const M &m) {
   ChartState base;
@@ -27,9 +27,9 @@ template <class M> void Short(const M &m) {
     Term("loin");
     SLOPPY_CHECK_CLOSE(-1.206319 - 0.3561665, score.Finish(), 0.001);
   }
-  BOOST_CHECK(base.left.full);
-  BOOST_CHECK_EQUAL(2, base.left.length);
-  BOOST_CHECK_EQUAL(1, base.right.length);
+  CHECK(base.left.full);
+  CHECK_EQ(2, base.left.length);
+  CHECK_EQ(1, base.right.length);
   VCheck("loin", base.right.words[0]);
 
   ChartState more_left;
@@ -40,10 +40,10 @@ template <class M> void Short(const M &m) {
     // p(little more loin | null context)
     SLOPPY_CHECK_CLOSE(-1.56538, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(3, more_left.left.length);
-  BOOST_CHECK_EQUAL(1, more_left.right.length);
+  CHECK_EQ(3, more_left.left.length);
+  CHECK_EQ(1, more_left.right.length);
   VCheck("loin", more_left.right.words[0]);
-  BOOST_CHECK(more_left.left.full);
+  CHECK(more_left.left.full);
 
   ChartState shorter;
   {
@@ -52,10 +52,10 @@ template <class M> void Short(const M &m) {
     score.NonTerminal(base, -1.206319 - 0.3561665);
     SLOPPY_CHECK_CLOSE(-0.30103 - 1.687872 - 1.206319 - 0.3561665, score.Finish(), 0.01);
   }
-  BOOST_CHECK_EQUAL(1, shorter.left.length);
-  BOOST_CHECK_EQUAL(1, shorter.right.length);
+  CHECK_EQ(1, shorter.left.length);
+  CHECK_EQ(1, shorter.right.length);
   VCheck("loin", shorter.right.words[0]);
-  BOOST_CHECK(shorter.left.full);
+  CHECK(shorter.left.full);
 }
 
 template <class M> void Charge(const M &m) {
@@ -66,10 +66,10 @@ template <class M> void Charge(const M &m) {
     Term("more");
     SLOPPY_CHECK_CLOSE(-1.509559 -0.4771212 -1.206319, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(1, base.left.length);
-  BOOST_CHECK_EQUAL(1, base.right.length);
+  CHECK_EQ(1, base.left.length);
+  CHECK_EQ(1, base.right.length);
   VCheck("more", base.right.words[0]);
-  BOOST_CHECK(base.left.full);
+  CHECK(base.left.full);
 
   ChartState extend;
   {
@@ -78,10 +78,10 @@ template <class M> void Charge(const M &m) {
     score.NonTerminal(base, -1.509559 -0.4771212 -1.206319);
     SLOPPY_CHECK_CLOSE(-3.91039, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(2, extend.left.length);
-  BOOST_CHECK_EQUAL(1, extend.right.length);
+  CHECK_EQ(2, extend.left.length);
+  CHECK_EQ(1, extend.right.length);
   VCheck("more", extend.right.words[0]);
-  BOOST_CHECK(extend.left.full);
+  CHECK(extend.left.full);
 
   ChartState tobos;
   {
@@ -90,8 +90,8 @@ template <class M> void Charge(const M &m) {
     score.NonTerminal(extend, -3.91039);
     SLOPPY_CHECK_CLOSE(-3.471169, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(0, tobos.left.length);
-  BOOST_CHECK_EQUAL(1, tobos.right.length);
+  CHECK_EQ(0, tobos.left.length);
+  CHECK_EQ(1, tobos.right.length);
 }
 
 template <class M> float LeftToRight(const M &m, const std::vector<WordIndex> &words, bool begin_sentence = false) {
@@ -220,7 +220,7 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
     score.NonTerminal(would, -1.687872);
     SLOPPY_CHECK_CLOSE(-1.687872 - 2.0, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(2, combine_also_would.right.length);
+  CHECK_EQ(2, combine_also_would.right.length);
 
   ChartState also_would;
   {
@@ -229,7 +229,7 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
     score.Terminal(m.GetVocabulary().Index("would"));
     SLOPPY_CHECK_CLOSE(-1.687872 - 2.0, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(2, also_would.right.length);
+  CHECK_EQ(2, also_would.right.length);
 
   ChartState consider;
   {
@@ -237,9 +237,9 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
     score.Terminal(m.GetVocabulary().Index("consider"));
     SLOPPY_CHECK_CLOSE(-1.687872, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(1, consider.left.length);
-  BOOST_CHECK_EQUAL(1, consider.right.length);
-  BOOST_CHECK(!consider.left.full);
+  CHECK_EQ(1, consider.left.length);
+  CHECK_EQ(1, consider.right.length);
+  CHECK(!consider.left.full);
 
   ChartState higher;
   float higher_score;
@@ -249,9 +249,9 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
     higher_score = score.Finish();
   }
   SLOPPY_CHECK_CLOSE(-1.509559, higher_score, 0.001);
-  BOOST_CHECK_EQUAL(1, higher.left.length);
-  BOOST_CHECK_EQUAL(1, higher.right.length);
-  BOOST_CHECK(!higher.left.full);
+  CHECK_EQ(1, higher.left.length);
+  CHECK_EQ(1, higher.right.length);
+  CHECK(!higher.left.full);
   VCheck("higher", higher.right.words[0]);
   SLOPPY_CHECK_CLOSE(-0.30103, higher.right.backoff[0], 0.001);
 
@@ -262,8 +262,8 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
     score.NonTerminal(higher, higher_score);
     SLOPPY_CHECK_CLOSE(-1.509559 - 1.687872 - 0.30103, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(2, consider_higher.left.length);
-  BOOST_CHECK(!consider_higher.left.full);
+  CHECK_EQ(2, consider_higher.left.length);
+  CHECK(!consider_higher.left.full);
 
   ChartState full;
   {
@@ -272,7 +272,7 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
     score.NonTerminal(consider_higher, -1.509559 - 1.687872 - 0.30103);
     SLOPPY_CHECK_CLOSE(-10.6879, score.Finish(), 0.001);
   }
-  BOOST_CHECK_EQUAL(4, full.right.length);
+  CHECK_EQ(4, full.right.length);
 }
 
 #define CHECK_SCORE(str, val) \
@@ -319,7 +319,7 @@ template <class M> void FullGrow(const M &m) {
     score.NonTerminal(lexical[5], lexical_scores[5]);
     CHECK_SCORE("looking .", l1_scores[2] = score.Finish());
   }
-  BOOST_CHECK_EQUAL(l1[2].left.length, 1);
+  CHECK_EQ(l1[2].left.length, 1);
   l1[3] = lexical[6];
   l1_scores[3] = lexical_scores[6];
 
@@ -337,8 +337,8 @@ template <class M> void FullGrow(const M &m) {
     score.NonTerminal(l1[3], l1_scores[3]);
     CHECK_SCORE("looking . </s>", l2_scores[1] = score.Finish());
   }
-  BOOST_CHECK_EQUAL(l2[1].left.length, 1);
-  BOOST_CHECK(l2[1].left.full);
+  CHECK_EQ(l2[1].left.length, 1);
+  CHECK(l2[1].left.full);
 
   ChartState top;
   {
@@ -369,23 +369,23 @@ template <class M> void Everything() {
   FullGrow(m);
 }
 
-BOOST_AUTO_TEST_CASE(ProbingAll) {
+TEST_CASE("ProbingAll") {
   Everything<Model>();
 }
-BOOST_AUTO_TEST_CASE(TrieAll) {
+TEST_CASE("TrieAll") {
   Everything<TrieModel>();
 }
-BOOST_AUTO_TEST_CASE(QuantTrieAll) {
+TEST_CASE("QuantTrieAll") {
   Everything<QuantTrieModel>();
 }
-BOOST_AUTO_TEST_CASE(ArrayQuantTrieAll) {
+TEST_CASE("ArrayQuantTrieAll") {
   Everything<QuantArrayTrieModel>();
 }
-BOOST_AUTO_TEST_CASE(ArrayTrieAll) {
+TEST_CASE("ArrayTrieAll") {
   Everything<ArrayTrieModel>();
 }
 
-BOOST_AUTO_TEST_CASE(RestProbing) {
+TEST_CASE("RestProbing") {
   Config config;
   config.messages = NULL;
   RestProbingModel m(FileLocation(), config);

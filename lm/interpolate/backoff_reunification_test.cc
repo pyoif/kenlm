@@ -1,8 +1,8 @@
 #include "backoff_reunification.hh"
 #include "../common/ngram_stream.hh"
 
-#define BOOST_TEST_MODULE InterpolateBackoffReunificationTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace lm {
 namespace interpolate {
@@ -83,20 +83,20 @@ public:
       for (WordIndex *idx = stream->begin(); idx != stream->end(); ++idx)
         ss << "(" << *idx << ")";
 
-        BOOST_CHECK(std::equal(stream->begin(), stream->end(), Grams<N>::grams[i].ids));
+        CHECK(std::equal(stream->begin(), stream->end(), Grams<N>::grams[i].ids));
             //"Mismatched id in CheckOutput<" << (int)N << ">: " << ss.str();
 
-        BOOST_CHECK_EQUAL(stream->Value().prob, Grams<N>::grams[i].prob);
+        CHECK_EQ(stream->Value().prob, Grams<N>::grams[i].prob);
 /*                     "Mismatched probability in CheckOutput<"
                          << (int)N << ">, got " << stream->Value().prob
                          << ", expected " << Grams<N>::grams[i].prob;*/
 
-        BOOST_CHECK_EQUAL(stream->Value().backoff, Grams<N>::grams[i].boff);
+        CHECK_EQ(stream->Value().backoff, Grams<N>::grams[i].boff);
 /*                     "Mismatched backoff in CheckOutput<"
                          << (int)N << ">, got " << stream->Value().backoff
                          << ", expected " << Grams<N>::grams[i].boff);*/
     }
-    BOOST_CHECK_EQUAL(i , sizeof(Grams<N>::grams) / sizeof(Gram<N>));
+    CHECK_EQ(i , sizeof(Grams<N>::grams) / sizeof(Gram<N>));
 /*                   "Did not get correct number of "
                        << (int)N << "-grams: expected "
                        << sizeof(Grams<N>::grams) / sizeof(Gram<N>)
@@ -105,7 +105,7 @@ public:
 };
 }
 
-BOOST_AUTO_TEST_CASE(BackoffReunificationTest) {
+TEST_CASE("BackoffReunificationTest") {
   util::stream::ChainConfig config;
   config.total_memory = 100;
   config.block_count = 1;

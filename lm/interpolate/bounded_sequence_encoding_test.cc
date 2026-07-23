@@ -2,14 +2,14 @@
 
 #include "../../util/scoped.hh"
 
-#define BOOST_TEST_MODULE BoundedSequenceEncodingTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace lm {
 namespace interpolate {
 namespace {
 
-BOOST_AUTO_TEST_CASE(Simple) {
+TEST_CASE("Simple") {
   unsigned char bounds[] = {2};
   BoundedSequenceEncoding enc(bounds, bounds + 1);
   util::scoped_malloc backing(util::MallocOrThrow(enc.EncodedLength()));
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(Simple) {
   enc.Encode(&input, backing.get());
   unsigned char output;
   enc.Decode(backing.get(), &output);
-  BOOST_CHECK_EQUAL(1, output);
+  CHECK_EQ(1, output);
 }
 
 void ExhaustiveTest(unsigned char *bound_begin, unsigned char *bound_end) {
@@ -29,7 +29,7 @@ void ExhaustiveTest(unsigned char *bound_begin, unsigned char *bound_end) {
     enc.Encode(&values[0], backing.get());
     enc.Decode(backing.get(), &out[0]);
     for (std::size_t i = 0; i != values.size(); ++i) {
-      BOOST_CHECK_EQUAL(values[i], out[i]);
+      CHECK_EQ(values[i], out[i]);
     }
     for (std::size_t i = 0;; ++i) {
       if (i == values.size()) return;
@@ -49,16 +49,16 @@ void CheckEncodeDecode(unsigned char *bounds, unsigned char *input,
   encoder.Decode(backing.get(), output);
 
   for (std::size_t i = 0; i < len; ++i) {
-    BOOST_CHECK_EQUAL(input[i], output[i]);
+    CHECK_EQ(input[i], output[i]);
   }
 }
 
-BOOST_AUTO_TEST_CASE(Exhaustive) {
+TEST_CASE("Exhaustive") {
   unsigned char bounds[] = {5, 2, 3, 9, 7, 20, 8};
   ExhaustiveTest(bounds, bounds + sizeof(bounds) / sizeof(unsigned char));
 }
 
-BOOST_AUTO_TEST_CASE(LessThan64) {
+TEST_CASE("LessThan64") {
   unsigned char bounds[] = {255, 255, 255, 255, 255, 255, 255, 3};
   unsigned char input[] = {172, 183, 254, 187, 96, 87, 65, 2};
   unsigned char output[] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(LessThan64) {
   CheckEncodeDecode(bounds, input, output, len);
 }
 
-BOOST_AUTO_TEST_CASE(Exactly64) {
+TEST_CASE("Exactly64") {
   unsigned char bounds[] = {255, 255, 255, 255, 255, 255, 255, 255};
   unsigned char input[] = {172, 183, 254, 187, 96, 87, 65, 16};
   unsigned char output[] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(Exactly64) {
   CheckEncodeDecode(bounds, input, output, len);
 }
 
-BOOST_AUTO_TEST_CASE(MoreThan64) {
+TEST_CASE("MoreThan64") {
   unsigned char bounds[] = {255, 255, 255, 255, 255, 255, 255, 255, 255};
   unsigned char input[] = {172, 183, 254, 187, 96, 87, 65, 16, 137};
   unsigned char output[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};

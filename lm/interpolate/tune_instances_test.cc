@@ -7,8 +7,8 @@
 #include "../../util/stream/typed_stream.hh"
 #include "../../util/string_piece.hh"
 
-#define BOOST_TEST_MODULE InstanceTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <vector>
 
@@ -16,7 +16,7 @@
 
 namespace lm { namespace interpolate { namespace {
 
-BOOST_AUTO_TEST_CASE(Toy) {
+TEST_CASE("Toy") {
   util::scoped_fd test_input(util::MakeTemp("temporary"));
   util::FileStream(test_input.get()) << "c\n";
 
@@ -53,37 +53,37 @@ BOOST_AUTO_TEST_CASE(Toy) {
 
   Instances inst(test_input.release(), model_names, config);
 
-  BOOST_CHECK_EQUAL(1, inst.BOS());
+  CHECK_EQ(1, inst.BOS());
   const Matrix &ln_unigrams = inst.LNUnigrams();
 
   // <unk>=0
-  BOOST_CHECK_CLOSE(-0.90309 * M_LN10, ln_unigrams(0, 0), 0.001);
-  BOOST_CHECK_CLOSE(-1 * M_LN10, ln_unigrams(0, 1), 0.001);
+  CHECK_CLOSE(-0.90309 * M_LN10, ln_unigrams(0, 0), 0.001);
+  CHECK_CLOSE(-1 * M_LN10, ln_unigrams(0, 1), 0.001);
   // <s>=1 doesn't matter as long as it doesn't cause NaNs.
-  BOOST_CHECK(!isnan(ln_unigrams(1, 0)));
-  BOOST_CHECK(!isnan(ln_unigrams(1, 1)));
+  CHECK(!isnan(ln_unigrams(1, 0)));
+  CHECK(!isnan(ln_unigrams(1, 1)));
   // a = 2
-  BOOST_CHECK_CLOSE(-0.46943438 * M_LN10, ln_unigrams(2, 0), 0.001);
-  BOOST_CHECK_CLOSE(-0.6146491 * M_LN10, ln_unigrams(2, 1), 0.001);
+  CHECK_CLOSE(-0.46943438 * M_LN10, ln_unigrams(2, 0), 0.001);
+  CHECK_CLOSE(-0.6146491 * M_LN10, ln_unigrams(2, 1), 0.001);
   // </s> = 3
-  BOOST_CHECK_CLOSE(-0.5720968 * M_LN10, ln_unigrams(3, 0), 0.001);
-  BOOST_CHECK_CLOSE(-0.6146491 * M_LN10, ln_unigrams(3, 1), 0.001);
+  CHECK_CLOSE(-0.5720968 * M_LN10, ln_unigrams(3, 0), 0.001);
+  CHECK_CLOSE(-0.6146491 * M_LN10, ln_unigrams(3, 1), 0.001);
   // c = 4
-  BOOST_CHECK_CLOSE(-0.90309 * M_LN10, ln_unigrams(4, 0), 0.001); // <unk>
-  BOOST_CHECK_CLOSE(-0.7659168 * M_LN10, ln_unigrams(4, 1), 0.001);
+  CHECK_CLOSE(-0.90309 * M_LN10, ln_unigrams(4, 0), 0.001); // <unk>
+  CHECK_CLOSE(-0.7659168 * M_LN10, ln_unigrams(4, 1), 0.001);
   // too lazy to do b = 5.
 
   // Two instances:
   // <s> predicts c
   // <s> c predicts </s>
-  BOOST_REQUIRE_EQUAL(2, inst.NumInstances());
-  BOOST_CHECK_CLOSE(-0.30103 * M_LN10, inst.LNBackoffs(0)(0), 0.001);
-  BOOST_CHECK_CLOSE(-0.30103 * M_LN10, inst.LNBackoffs(0)(1), 0.001);
+  REQUIRE_EQ(2, inst.NumInstances());
+  CHECK_CLOSE(-0.30103 * M_LN10, inst.LNBackoffs(0)(0), 0.001);
+  CHECK_CLOSE(-0.30103 * M_LN10, inst.LNBackoffs(0)(1), 0.001);
 
 
   // Backoffs of <s> c
-  BOOST_CHECK_CLOSE(0.0, inst.LNBackoffs(1)(0), 0.001);
-  BOOST_CHECK_CLOSE((-0.30103 - 0.30103) * M_LN10, inst.LNBackoffs(1)(1), 0.001);
+  CHECK_CLOSE(0.0, inst.LNBackoffs(1)(0), 0.001);
+  CHECK_CLOSE((-0.30103 - 0.30103) * M_LN10, inst.LNBackoffs(1)(1), 0.001);
 
   util::stream::Chain extensions(util::stream::ChainConfig(inst.ReadExtensionsEntrySize(), 2, 300));
   inst.ReadExtensions(extensions);
@@ -98,41 +98,41 @@ BOOST_AUTO_TEST_CASE(Toy) {
   // Magic probabilities come from querying the models directly.
 
   // <s> a from model 0
-  BOOST_REQUIRE(stream);
-  BOOST_CHECK_EQUAL(0, stream->instance);
-  BOOST_CHECK_EQUAL(2 /* a */, stream->word);
-  BOOST_CHECK_EQUAL(0, stream->model);
-  BOOST_CHECK_CLOSE(-0.37712017 * M_LN10, stream->ln_prob, 0.001);
+  REQUIRE(stream);
+  CHECK_EQ(0, stream->instance);
+  CHECK_EQ(2 /* a */, stream->word);
+  CHECK_EQ(0, stream->model);
+  CHECK_CLOSE(-0.37712017 * M_LN10, stream->ln_prob, 0.001);
 
   // <s> a from model 1
-  BOOST_REQUIRE(++stream);
-  BOOST_CHECK_EQUAL(0, stream->instance);
-  BOOST_CHECK_EQUAL(2 /* a */, stream->word);
-  BOOST_CHECK_EQUAL(1, stream->model);
-  BOOST_CHECK_CLOSE(-0.4301247 * M_LN10, stream->ln_prob, 0.001);
+  REQUIRE(++stream);
+  CHECK_EQ(0, stream->instance);
+  CHECK_EQ(2 /* a */, stream->word);
+  CHECK_EQ(1, stream->model);
+  CHECK_CLOSE(-0.4301247 * M_LN10, stream->ln_prob, 0.001);
 
   // <s> c from model 1
-  BOOST_REQUIRE(++stream);
-  BOOST_CHECK_EQUAL(0, stream->instance);
-  BOOST_CHECK_EQUAL(4 /* c */, stream->word);
-  BOOST_CHECK_EQUAL(1, stream->model);
-  BOOST_CHECK_CLOSE(-0.4740302 * M_LN10, stream->ln_prob, 0.001);
+  REQUIRE(++stream);
+  CHECK_EQ(0, stream->instance);
+  CHECK_EQ(4 /* c */, stream->word);
+  CHECK_EQ(1, stream->model);
+  CHECK_CLOSE(-0.4740302 * M_LN10, stream->ln_prob, 0.001);
 
   // <s> b from model 0
-  BOOST_REQUIRE(++stream);
-  BOOST_CHECK_EQUAL(0, stream->instance);
-  BOOST_CHECK_EQUAL(5 /* b */, stream->word);
-  BOOST_CHECK_EQUAL(0, stream->model);
-  BOOST_CHECK_CLOSE(-0.41574955 * M_LN10, stream->ln_prob, 0.001);
+  REQUIRE(++stream);
+  CHECK_EQ(0, stream->instance);
+  CHECK_EQ(5 /* b */, stream->word);
+  CHECK_EQ(0, stream->model);
+  CHECK_CLOSE(-0.41574955 * M_LN10, stream->ln_prob, 0.001);
 
   // c </s> from model 1
-  BOOST_REQUIRE(++stream);
-  BOOST_CHECK_EQUAL(1, stream->instance);
-  BOOST_CHECK_EQUAL(3 /* </s> */, stream->word);
-  BOOST_CHECK_EQUAL(1, stream->model);
-  BOOST_CHECK_CLOSE(-0.09113217 * M_LN10, stream->ln_prob, 0.001);
+  REQUIRE(++stream);
+  CHECK_EQ(1, stream->instance);
+  CHECK_EQ(3 /* </s> */, stream->word);
+  CHECK_EQ(1, stream->model);
+  CHECK_CLOSE(-0.09113217 * M_LN10, stream->ln_prob, 0.001);
 
-  BOOST_CHECK(!++stream);
+  CHECK(!++stream);
 }
 
 }}} // namespaces

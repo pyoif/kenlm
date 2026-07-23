@@ -6,8 +6,8 @@
 #include "../../util/stream/chain.hh"
 #include "../../util/stream/multi_stream.hh"
 
-#define BOOST_TEST_MODULE NormalizeTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace lm { namespace interpolate { namespace {
 
@@ -34,29 +34,29 @@ void CheckOutput(const util::stream::ChainPosition &from) {
     sum += pow(10.0, kInputs[i]);
   }
   sum = log10(sum);
-  BOOST_REQUIRE(in);
-  BOOST_CHECK_CLOSE(kInputs[0] - sum, in->Value(), 0.0001);
-  BOOST_REQUIRE(++in);
-  BOOST_CHECK_CLOSE(kInputs[1] - sum, in->Value(), 0.0001);
-  BOOST_REQUIRE(++in);
-  BOOST_CHECK_CLOSE(kInputs[2] - sum, in->Value(), 0.0001);
-  BOOST_REQUIRE(++in);
-  BOOST_CHECK_CLOSE(kInputs[3] - sum, in->Value(), 0.0001);
-  BOOST_REQUIRE(++in);
-  BOOST_CHECK_CLOSE(kInputs[4] - sum, in->Value(), 0.0001);
-  BOOST_REQUIRE(++in);
-  BOOST_CHECK_CLOSE(kInputs[5] - sum, in->Value(), 0.0001);
-  BOOST_CHECK(!++in);
+  REQUIRE(in);
+  CHECK_CLOSE(kInputs[0] - sum, in->Value(), 0.0001);
+  REQUIRE(++in);
+  CHECK_CLOSE(kInputs[1] - sum, in->Value(), 0.0001);
+  REQUIRE(++in);
+  CHECK_CLOSE(kInputs[2] - sum, in->Value(), 0.0001);
+  REQUIRE(++in);
+  CHECK_CLOSE(kInputs[3] - sum, in->Value(), 0.0001);
+  REQUIRE(++in);
+  CHECK_CLOSE(kInputs[4] - sum, in->Value(), 0.0001);
+  REQUIRE(++in);
+  CHECK_CLOSE(kInputs[5] - sum, in->Value(), 0.0001);
+  CHECK(!++in);
 }
 
-BOOST_AUTO_TEST_CASE(Unigrams) {
+TEST_CASE("Unigrams") {
   InterpolateInfo info;
   info.lambdas.push_back(2.0);
   info.lambdas.push_back(-0.1);
   info.orders.push_back(1);
   info.orders.push_back(1);
 
-  BOOST_CHECK_EQUAL(0, MakeEncoder(info, 1).EncodedLength());
+  CHECK_EQ(0, MakeEncoder(info, 1).EncodedLength());
 
   // No backoffs.
   util::stream::Chains blank(0);

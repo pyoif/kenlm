@@ -7,8 +7,8 @@
 #include "../../util/stream/io.hh"
 #include "../../util/stream/typed_stream.hh"
 
-#define BOOST_TEST_MODULE DerivativeTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace lm { namespace interpolate {
 
@@ -45,7 +45,7 @@ class MockInstances : public Instances {
 
 namespace {
 
-BOOST_AUTO_TEST_CASE(Small) {
+TEST_CASE("Small") {
   MockInstances mock;
 
   {
@@ -114,12 +114,12 @@ BOOST_AUTO_TEST_CASE(Small) {
   expected_gradient(0) += p_I(0) * log(0.1 * 0.2);
   expected_gradient(0) += p_I(1) * log(0.4 * 0.2);
   expected_gradient(0) += p_I(2) * log(model_0_word_2);
-  BOOST_CHECK_CLOSE(expected_gradient(0), gradient(0), 0.01);
+  CHECK_CLOSE(expected_gradient(0), gradient(0), 0.01);
 
   expected_gradient(1) += p_I(0) * log(0.6 * 0.4);
   expected_gradient(1) += p_I(1) * log(model_1_word_1);
   expected_gradient(1) += p_I(2) * log(0.1 * 0.4);
-  BOOST_CHECK_CLOSE(expected_gradient(1), gradient(1), 0.01);
+  CHECK_CLOSE(expected_gradient(1), gradient(1), 0.01);
 
   Matrix expected_hessian(2, 2);
   expected_hessian(1, 0) =
@@ -131,8 +131,8 @@ BOOST_AUTO_TEST_CASE(Small) {
     (p_I(0) * log(0.1 * 0.2) + p_I(1) * log(0.4 * 0.2) + p_I(2) * log(model_0_word_2)) *
     (p_I(0) * log(0.6 * 0.4) + p_I(1) * log(model_1_word_1) + p_I(2) * log(0.1 * 0.4));
   expected_hessian(0, 1) = expected_hessian(1, 0);
-  BOOST_CHECK_CLOSE(expected_hessian(1, 0), hessian(1, 0), 0.01);
-  BOOST_CHECK_CLOSE(expected_hessian(0, 1), hessian(0, 1), 0.01);
+  CHECK_CLOSE(expected_hessian(1, 0), hessian(1, 0), 0.01);
+  CHECK_CLOSE(expected_hessian(0, 1), hessian(0, 1), 0.01);
 }
 
 }}} // namespaces

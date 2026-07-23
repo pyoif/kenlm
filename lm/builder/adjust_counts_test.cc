@@ -4,9 +4,8 @@
 #include "payload.hh"
 #include "../../util/scoped.hh"
 
-#include <boost/thread/thread.hpp>
-#define BOOST_TEST_MODULE AdjustCounts
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace lm { namespace builder { namespace {
 
@@ -54,7 +53,7 @@ class WriteInput {
     }
 };
 
-BOOST_AUTO_TEST_CASE(Simple) {
+TEST_CASE("Simple") {
   KeepCopy outputs[4];
   std::vector<uint64_t> counts;
   std::vector<Discount> discount;
@@ -71,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Simple) {
     chains[3] >> WriteInput();
     util::stream::ChainPositions for_adjust(chains);
     for (unsigned i = 0; i < 4; ++i) {
-      chains[i] >> boost::ref(outputs[i]);
+      chains[i] >> std::ref(outputs[i]);
     }
     chains >> util::stream::kRecycle;
     std::vector<uint64_t> counts_pruned(4);
@@ -79,33 +78,33 @@ BOOST_AUTO_TEST_CASE(Simple) {
     DiscountConfig discount_config;
     discount_config.fallback = Discount();
     discount_config.bad_action = THROW_UP;
-    BOOST_CHECK_THROW(AdjustCounts(prune_thresholds, counts, counts_pruned, std::vector<bool>(), discount_config, discount).Run(for_adjust), BadDiscountException);
+    CHECK_THROWS_AS(AdjustCounts(prune_thresholds, counts, counts_pruned, std::vector<bool>(), discount_config, discount).Run(for_adjust), BadDiscountException);
   }
-  BOOST_REQUIRE_EQUAL(4UL, counts.size());
-  BOOST_CHECK_EQUAL(4UL, counts[0]);
+  REQUIRE_EQ(4UL, counts.size());
+  CHECK_EQ(4UL, counts[0]);
   // These are no longer set because the discounts are bad.
-/*  BOOST_CHECK_EQUAL(4UL, counts[1]);
-  BOOST_CHECK_EQUAL(3UL, counts[2]);
-  BOOST_CHECK_EQUAL(3UL, counts[3]);*/
-  BOOST_REQUIRE_EQUAL(NGram<BuildingPayload>::TotalSize(1) * 4, outputs[0].Size());
+/*  CHECK_EQ(4UL, counts[1]);
+  CHECK_EQ(3UL, counts[2]);
+  CHECK_EQ(3UL, counts[3]);*/
+  REQUIRE_EQ(NGram<BuildingPayload>::TotalSize(1) * 4, outputs[0].Size());
   NGram<BuildingPayload> uni(outputs[0].Get(), 1);
-  BOOST_CHECK_EQUAL(kUNK, *uni.begin());
-  BOOST_CHECK_EQUAL(0ULL, uni.Value().count);
+  CHECK_EQ(kUNK, *uni.begin());
+  CHECK_EQ(0ULL, uni.Value().count);
   uni.NextInMemory();
-  BOOST_CHECK_EQUAL(kBOS, *uni.begin());
-  BOOST_CHECK_EQUAL(0ULL, uni.Value().count);
+  CHECK_EQ(kBOS, *uni.begin());
+  CHECK_EQ(0ULL, uni.Value().count);
   uni.NextInMemory();
-  BOOST_CHECK_EQUAL(0UL, *uni.begin());
-  BOOST_CHECK_EQUAL(2ULL, uni.Value().count);
+  CHECK_EQ(0UL, *uni.begin());
+  CHECK_EQ(2ULL, uni.Value().count);
   uni.NextInMemory();
-  BOOST_CHECK_EQUAL(2ULL, uni.Value().count);
-  BOOST_CHECK_EQUAL(2UL, *uni.begin());
+  CHECK_EQ(2ULL, uni.Value().count);
+  CHECK_EQ(2UL, *uni.begin());
 
-  BOOST_REQUIRE_EQUAL(NGram<BuildingPayload>::TotalSize(2) * 4, outputs[1].Size());
+  REQUIRE_EQ(NGram<BuildingPayload>::TotalSize(2) * 4, outputs[1].Size());
   NGram<BuildingPayload> bi(outputs[1].Get(), 2);
-  BOOST_CHECK_EQUAL(0UL, *bi.begin());
-  BOOST_CHECK_EQUAL(0UL, *(bi.begin() + 1));
-  BOOST_CHECK_EQUAL(1ULL, bi.Value().count);
+  CHECK_EQ(0UL, *bi.begin());
+  CHECK_EQ(0UL, *(bi.begin() + 1));
+  CHECK_EQ(1ULL, bi.Value().count);
   bi.NextInMemory();
 }
 

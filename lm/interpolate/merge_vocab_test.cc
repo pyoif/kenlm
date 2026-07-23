@@ -1,5 +1,5 @@
-#define BOOST_TEST_MODULE InterpolateMergeVocabTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include "../enumerate_vocab.hh"
 #include "merge_vocab.hh"
@@ -91,7 +91,7 @@ class DoNothingEnumerate : public EnumerateVocab {
     void Add(WordIndex, const StringPiece &) {}
 };
 
-BOOST_AUTO_TEST_CASE(MergeVocabTest) {
+TEST_CASE("MergeVocabTest") {
   TestFiles files;
 
   util::FixedArray<int> used_files(3);
@@ -112,31 +112,31 @@ BOOST_AUTO_TEST_CASE(MergeVocabTest) {
     MergeVocab(used_files, universal_vocab, writer);
   }
 
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(0, 0), 0);
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(1, 0), 0);
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(2, 0), 0);
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(0, 1), 1);
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(1, 1), 2);
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(2, 1), 8);
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(0, 5), 11);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(0, 0), 0);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(1, 0), 0);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(2, 0), 0);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(0, 1), 1);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(1, 1), 2);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(2, 1), 8);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(0, 5), 11);
 #if BYTE_ORDER == LITTLE_ENDIAN
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(1, 3), 4);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(1, 3), 4);
 #elif BYTE_ORDER == BIG_ENDIAN
   // MurmurHash has a different ordering of the vocabulary.
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(1, 3), 5);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(1, 3), 5);
 #endif
-  BOOST_CHECK_EQUAL(universal_vocab.GetUniversalIdx(2, 3), 10);
+  CHECK_EQ(universal_vocab.GetUniversalIdx(2, 3), 10);
 
   util::SeekOrThrow(combined.get(), 0);
   util::FilePiece f(combined.release());
   std::vector<VocabEntry> expected = ParseVocab("a\tis this\tthis a\tfirst cut\tthis\ta first\tcut\tis\ti\tsecd\tfirst");
   for (std::vector<VocabEntry>::const_iterator i = expected.begin(); i != expected.end(); ++i) {
-    BOOST_CHECK_EQUAL(i->str, f.ReadLine('\0'));
+    CHECK_EQ(i->str, f.ReadLine('\0'));
   }
-  BOOST_CHECK_THROW(f.ReadLine('\0'), util::EndOfFileException);
+  CHECK_THROWS_AS(f.ReadLine('\0'), util::EndOfFileException);
 }
 
-BOOST_AUTO_TEST_CASE(MergeVocabNoUnkTest) {
+TEST_CASE("MergeVocabNoUnkTest") {
   TestFiles files;
   util::FixedArray<int> used_files(1);
   used_files.push_back(files.NoUNK());
@@ -146,10 +146,10 @@ BOOST_AUTO_TEST_CASE(MergeVocabNoUnkTest) {
 
   UniversalVocab universal_vocab(model_max_idx);
   DoNothingEnumerate nothing;
-  BOOST_CHECK_THROW(MergeVocab(used_files, universal_vocab, nothing), FormatLoadException);
+  CHECK_THROWS_AS(MergeVocab(used_files, universal_vocab, nothing), FormatLoadException);
 }
 
-BOOST_AUTO_TEST_CASE(MergeVocabWrongOrderTest) {
+TEST_CASE("MergeVocabWrongOrderTest") {
   TestFiles files;
 
   util::FixedArray<int> used_files(2);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(MergeVocabWrongOrderTest) {
 
   lm::interpolate::UniversalVocab universal_vocab(model_max_idx);
   DoNothingEnumerate nothing;
-  BOOST_CHECK_THROW(MergeVocab(used_files, universal_vocab, nothing), FormatLoadException);
+  CHECK_THROWS_AS(MergeVocab(used_files, universal_vocab, nothing), FormatLoadException);
 }
 
 }}} // namespaces
