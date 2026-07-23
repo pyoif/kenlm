@@ -27,7 +27,12 @@ option(COMPILE_TESTS "Compile tests" OFF)
 option(ENABLE_PYTHON "Build Python bindings" OFF)
 option(BUILD_PYTHON_STANDALONE "Build standalone C++ lib with Python install" OFF)
 # Eigen3 less than 3.1.0 has a race condition: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=466
-find_package(Eigen3 3.0 CONFIG)
+# CMake CONFIG mode rejects major-version bumps (e.g. 5.x vs requested 3.x).
+# Try exact version first, fall back to any Eigen3 package if 5.x is installed.
+find_package(Eigen3 3.1.0 CONFIG)
+if(NOT EIGEN3_FOUND)
+  find_package(Eigen3 CONFIG)
+endif()
 include(CMakeDependentOption)
 cmake_dependent_option(ENABLE_INTERPOLATE "Build interpolation program (depends on Eigen3)" ON "EIGEN3_FOUND AND NOT WIN32" OFF)
 
@@ -103,14 +108,14 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
 # We need boost
-# Force FindBoost module mode: CMake >=4.0 removed the module (restored via CMP0167),
-# but config mode (Homebrew) fails on header-only components (system, thread).
-set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "Avoid Boost config mode for header-only components")
-find_package(Boost 1.41.0 REQUIRED COMPONENTS
-  program_options
-  system
-  thread
-)
+# CMake 4.x removed FindBoost module — CMP0167=OLD restores it.
+# Modern Boost (Homebrew/vcpkg) uses Config mode; system/thread are header-only
+# so no per-component .cmake in newer releases. Try Config first, module fallback.
+find_package(Boost 1.41.0 QUIET COMPONENTS program_options system thread)
+if(NOT Boost_FOUND)
+  # Config mode with just linkable component, header-only deps need no .cmake
+  find_package(Boost 1.41.0 REQUIRED COMPONENTS program_options)
+endif()
 
 # Define where include files live
 include_directories(${Boost_INCLUDE_DIRS})
