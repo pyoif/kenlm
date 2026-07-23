@@ -11,18 +11,16 @@
 #include <string>
 #include <cstdlib>
 
-#if defined __MINGW32__
+#if defined(_WIN32) || defined(_WIN64)
 #include <ctime>
 #include <fcntl.h>
+#include <io.h>
 
-#if !defined mkstemp
-// TODO insecure
-int mkstemp(char * stemplate)
-{
-    char *filename = mktemp(stemplate);
-    if (filename == NULL)
-        return -1;
-    return open(filename, O_RDWR | O_CREAT, 0600);
+#if !defined(mkstemp)
+inline int mkstemp(char * stemplate) {
+    char *filename = _mktemp(stemplate);
+    if (filename == NULL) return -1;
+    return _open(filename, _O_RDWR | _O_CREAT, 0600);
 }
 #endif
 

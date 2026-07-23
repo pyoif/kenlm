@@ -4,8 +4,13 @@
 #include <doctest/doctest.h>
 
 #include <algorithm>
+#include <random>
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 namespace util { namespace stream { namespace {
 
@@ -36,7 +41,9 @@ TEST_CASE("FromShuffled") {
   for (uint64_t i = 0; i < kSize; ++i) {
     shuffled.push_back(i);
   }
-  std::random_shuffle(shuffled.begin(), shuffled.end());
+  static std::random_device rd;
+  static std::mt19937 g(rd());
+  std::shuffle(shuffled.begin(), shuffled.end(), g);
 
   ChainConfig config;
   config.entry_size = 8;
