@@ -43,7 +43,7 @@ class Output {
 
     // Takes ownership.
     void Add(OutputHook *hook) {
-      outputs_[hook->Type()].emplace_back(hook);
+      outputs_[hook->Type()].push_back(std::unique_ptr<OutputHook>(hook));
     }
 
     bool Have(HookType hook_type) const {

@@ -15,7 +15,6 @@
 #include <ctime>
 #include <fcntl.h>
 #include <io.h>
-
 #if !defined(mkstemp)
 inline int mkstemp(char * stemplate) {
     char *filename = _mktemp(stemplate);
@@ -23,7 +22,6 @@ inline int mkstemp(char * stemplate) {
     return _open(filename, _O_RDWR | _O_CREAT, 0600);
 }
 #endif
-
 #endif
 
 namespace util {
