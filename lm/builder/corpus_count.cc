@@ -22,7 +22,7 @@ namespace lm {
 namespace builder {
 namespace {
 
-class DedupeHash : public std::unary_function<const WordIndex *, bool> {
+class DedupeHash {
   public:
     explicit DedupeHash(std::size_t order) : size_(order * sizeof(WordIndex)) {}
 
@@ -34,7 +34,7 @@ class DedupeHash : public std::unary_function<const WordIndex *, bool> {
     const std::size_t size_;
 };
 
-class DedupeEquals : public std::binary_function<const WordIndex *, const WordIndex *, bool> {
+class DedupeEquals {
   public:
     explicit DedupeEquals(std::size_t order) : size_(order * sizeof(WordIndex)) {}
 

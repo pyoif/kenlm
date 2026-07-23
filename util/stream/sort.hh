@@ -200,7 +200,7 @@ template <class Compare> class MergeQueue {
     };
 
     // Wrapper comparison function for queue entries.
-    class Greater : public std::binary_function<const Entry &, const Entry &, bool> {
+    class Greater {
       public:
         explicit Greater(const Compare &compare) : compare_(compare) {}
 

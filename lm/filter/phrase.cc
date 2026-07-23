@@ -104,7 +104,7 @@ class Arc {
     detail::Vertex *from_;
 };
 
-struct ArcGreater : public std::binary_function<const Arc *, const Arc *, bool> {
+struct ArcGreater {
   bool operator()(const Arc *first, const Arc *second) const {
     return first->Current() > second->Current();
   }

@@ -9,7 +9,7 @@
 
 namespace util { namespace stream { namespace {
 
-struct CompareUInt64 : public std::binary_function<const void *, const void *, bool> {
+struct CompareUInt64 {
   bool operator()(const void *first, const void *second) const {
     return *static_cast<const uint64_t*>(first) < *reinterpret_cast<const uint64_t*>(second);
   }

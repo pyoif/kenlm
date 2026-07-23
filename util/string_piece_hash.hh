@@ -21,13 +21,13 @@ U_NAMESPACE_END
 #endif
 
 /* Support for lookup of StringPiece in boost::unordered_map<std::string> */
-struct StringPieceCompatibleHash : public std::unary_function<const StringPiece &, size_t> {
+struct StringPieceCompatibleHash {
   size_t operator()(const StringPiece &str) const {
     return hash_value(str);
   }
 };
 
-struct StringPieceCompatibleEquals : public std::binary_function<const StringPiece &, const std::string &, bool> {
+struct StringPieceCompatibleEquals {
   bool operator()(const StringPiece &first, const StringPiece &second) const {
     return first == second;
   }

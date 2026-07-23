@@ -47,7 +47,7 @@ class BackoffQueueEntry {
     NGramStream<ProbBackoff> stream_;
 };
 
-struct PtrGreater : public std::binary_function<const BackoffQueueEntry *, const BackoffQueueEntry *, bool> {
+struct PtrGreater {
   bool operator()(const BackoffQueueEntry *first, const BackoffQueueEntry *second) const {
     return SuffixLexicographicLess<NGramHeader>()(**second, **first);
   }

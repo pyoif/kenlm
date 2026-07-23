@@ -11,7 +11,7 @@
 namespace util {
 
 namespace detail {
-template <class Range> struct RangeLessBySize : public std::binary_function<const Range &, const Range &, bool> {
+template <class Range> struct RangeLessBySize {
   bool operator()(const Range &left, const Range &right) const {
     return left.size() < right.size();
   }

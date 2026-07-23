@@ -12,7 +12,7 @@ namespace lm {
 /**
  * Abstract parent class for defining custom n-gram comparators.
  */
-template <class Child> class Comparator : public std::binary_function<const void *, const void *, bool> {
+template <class Child> class Comparator {
   public:
 
     /**
@@ -170,7 +170,7 @@ class PrefixOrder : public Comparator<PrefixOrder> {
     static const unsigned kMatchOffset = 0;
 };
 
-template <class Range> struct SuffixLexicographicLess : public std::binary_function<const Range, const Range, bool> {
+template <class Range> struct SuffixLexicographicLess {
   bool operator()(const Range first, const Range second) const {
     for (const WordIndex *f = first.end() - 1, *s = second.end() - 1; f >= first.begin() && s >= second.begin(); --f, --s) {
       if (*f < *s) return true;
