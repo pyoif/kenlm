@@ -1,21 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
 
-# CMake >= 4.0 removed the FindBoost module. CMP0167=OLD restores it.
-# On CI runners (≤3.31) this is a no-op; on 4.x dev machines it keeps builds working.
-if(POLICY CMP0167)
-  cmake_policy(SET CMP0167 OLD)
-endif()
-
-if (WIN32)
-    set(Boost_USE_STATIC_LIBS OFF)
-    # The auto-linking feature has problems with USE_STATIC_LIBS off, so we use
-    # BOOST_ALL_NO_LIB to turn it off.
-    # Several boost libraries headers aren't configured correctly if
-    # USE_STATIC_LIBS is off, so we explicitly say they are dynamic with the
-    # remaining definitions.
-    add_definitions(-DBOOST_ALL_NO_LIB -DBOOST_PROGRAM_OPTIONS_DYN_LINK -DBOOST_IOSTREAMS_DYN_LINK -DBOOST_THREAD_DYN_LINK)
-endif( )
-
 # Define a single cmake project
 project(kenlm)
 
@@ -48,7 +32,6 @@ endif()
 if (FORCE_STATIC)
   #presumably overkill, is there a better way?
   #http://cmake.3232098.n2.nabble.com/Howto-compile-static-executable-td5580269.html
-  set(Boost_USE_STATIC_LIBS ON)
   set_property(GLOBAL PROPERTY LINK_SEARCH_START_STATIC ON)
   set_property(GLOBAL PROPERTY LINK_SEARCH_END_STATIC ON)
   set(BUILD_SHARED_LIBRARIES OFF)
@@ -105,20 +88,11 @@ endif()
 # And our helper modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
-# We need boost
-# CMake 4.x removed FindBoost module — CMP0167=OLD restores it.
-# Only program_options remains as a compiled library dependency.
-# All other boost usage (thread, ptr_container, mutex, interprocess_semaphore,
-# scoped_array, optional, reference_wrapper, lexical_cast, thread_specific_ptr)
-# replaced with C++11 std equivalents.
-# Modern Boost (Homebrew/vcpkg) uses Config mode; try Config first, module fallback.
-find_package(Boost 1.90.0 QUIET CONFIG COMPONENTS program_options)
-if(NOT Boost_FOUND)
-  find_package(Boost 1.90.0 REQUIRED MODULE COMPONENTS program_options)
-endif()
-
-# Define where include files live
-include_directories(${Boost_INCLUDE_DIRS})
+# Vendored third-party headers
+add_library(kenlm_cli11 INTERFACE)
+target_include_directories(kenlm_cli11 INTERFACE ${CMAKE_SOURCE_DIR}/third_party/CLI11/include)
+add_library(kenlm_doctest INTERFACE)
+target_include_directories(kenlm_doctest INTERFACE ${CMAKE_SOURCE_DIR}/third_party/doctest/include)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
