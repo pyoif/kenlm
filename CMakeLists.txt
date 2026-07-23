@@ -19,7 +19,7 @@ endif( )
 # Define a single cmake project
 project(kenlm)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -107,12 +107,14 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
 # We need boost
 # CMake 4.x removed FindBoost module — CMP0167=OLD restores it.
-# Modern Boost (Homebrew/vcpkg) uses Config mode; system/thread are header-only
-# so no per-component .cmake in newer releases. Try Config first, module fallback.
-find_package(Boost 1.90.0 QUIET COMPONENTS program_options system thread)
+# Only program_options remains as a compiled library dependency.
+# All other boost usage (thread, ptr_container, mutex, interprocess_semaphore,
+# scoped_array, optional, reference_wrapper, lexical_cast, thread_specific_ptr)
+# replaced with C++11 std equivalents.
+# Modern Boost (Homebrew/vcpkg) uses Config mode; try Config first, module fallback.
+find_package(Boost 1.90.0 QUIET CONFIG COMPONENTS program_options)
 if(NOT Boost_FOUND)
-  # Config mode with just linkable component, header-only deps need no .cmake
-  find_package(Boost 1.90.0 REQUIRED COMPONENTS program_options)
+  find_package(Boost 1.90.0 REQUIRED MODULE COMPONENTS program_options)
 endif()
 
 # Define where include files live
