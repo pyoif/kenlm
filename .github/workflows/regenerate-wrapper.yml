@@ -1,0 +1,49 @@
+name: Regenerate Cython Wrapper
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      python-version:
+        description: 'Python version for regeneration'
+        default: '3.14'
+        required: false
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ github.event.inputs.python-version || '14' }}
+
+      - name: Install Cython
+        run: pip install cython
+
+      - name: Regenerate kenlm.cpp from kenlm.pyx
+        run: |
+          cd python
+          cython kenlm.pyx --cplus -3 -o kenlm_new.cpp
+          mv kenlm_new.cpp kenlm.cpp
+
+      - name: Check for changes
+        id: diff
+        run: |
+          if git diff --exit-code python/kenlm.cpp; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push regenerated wrapper
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add python/kenlm.cpp
+          git commit -m "chore: regenerate kenlm.cpp with latest Cython"
+          git push
