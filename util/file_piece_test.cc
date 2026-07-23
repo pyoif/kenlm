@@ -5,8 +5,8 @@
 #include "file.hh"
 #include "scoped.hh"
 
-#define BOOST_TEST_MODULE FilePieceTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include <fstream>
 #include <iostream>
 #include <cstdio>
@@ -25,21 +25,21 @@ std::string FileLocation() {
 }
 
 /* istream */
-BOOST_AUTO_TEST_CASE(IStream) {
+TEST_CASE("IStream") {
   std::fstream ref(FileLocation().c_str(), std::ios::in);
   std::fstream backing(FileLocation().c_str(), std::ios::in);
   FilePiece test(backing);
   std::string ref_line;
   while (getline(ref, ref_line)) {
     StringPiece test_line(test.ReadLine());
-    BOOST_CHECK_EQUAL(ref_line, test_line);
+    CHECK_EQ(ref_line, test_line);
   }
-  BOOST_CHECK_THROW(test.get(), EndOfFileException);
-  BOOST_CHECK_THROW(test.get(), EndOfFileException);
+  CHECK_THROWS_AS(test.get(), EndOfFileException);
+  CHECK_THROWS_AS(test.get(), EndOfFileException);
 }
 
 /* mmap implementation */
-BOOST_AUTO_TEST_CASE(MMapReadLine) {
+TEST_CASE("MMapReadLine") {
   std::fstream ref(FileLocation().c_str(), std::ios::in);
   FilePiece test(FileLocation().c_str(), NULL, 1);
   std::string ref_line;
@@ -47,14 +47,14 @@ BOOST_AUTO_TEST_CASE(MMapReadLine) {
     StringPiece test_line(test.ReadLine());
     // I submitted a bug report to ICU: http://bugs.icu-project.org/trac/ticket/7924
     if (!test_line.empty() || !ref_line.empty()) {
-      BOOST_CHECK_EQUAL(ref_line, test_line);
+      CHECK_EQ(ref_line, test_line);
     }
   }
-  BOOST_CHECK_THROW(test.get(), EndOfFileException);
+  CHECK_THROWS_AS(test.get(), EndOfFileException);
 }
 
 /* mmap with seek beforehand */
-BOOST_AUTO_TEST_CASE(MMapSeek) {
+TEST_CASE("MMapSeek") {
   std::fstream ref(FileLocation().c_str(), std::ios::in);
   ref.seekg(10);
   scoped_fd file(util::OpenReadOrThrow(FileLocation().c_str()));
@@ -65,10 +65,10 @@ BOOST_AUTO_TEST_CASE(MMapSeek) {
     StringPiece test_line(test.ReadLine());
     // I submitted a bug report to ICU: http://bugs.icu-project.org/trac/ticket/7924
     if (!test_line.empty() || !ref_line.empty()) {
-      BOOST_CHECK_EQUAL(ref_line, test_line);
+      CHECK_EQ(ref_line, test_line);
     }
   }
-  BOOST_CHECK_THROW(test.get(), EndOfFileException);
+  CHECK_THROWS_AS(test.get(), EndOfFileException);
 }
 
 #if !defined(_WIN32) && !defined(_WIN64) && !defined(__APPLE__)
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(MMapSeek) {
  * reimplement popen.  This is an issue with the test.
  */
 /* read() implementation */
-BOOST_AUTO_TEST_CASE(StreamReadLine) {
+TEST_CASE("StreamReadLine") {
   std::fstream ref(FileLocation().c_str(), std::ios::in);
 
   std::string popen_args = "cat \"";
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(StreamReadLine) {
   popen_args += '"';
 
   FILE *catter = popen(popen_args.c_str(), "r");
-  BOOST_REQUIRE(catter);
+  REQUIRE(catter);
 
   FilePiece test(dup(fileno(catter)), "file_piece.cc", NULL, 1);
   std::string ref_line;
@@ -92,25 +92,25 @@ BOOST_AUTO_TEST_CASE(StreamReadLine) {
     StringPiece test_line(test.ReadLine());
     // I submitted a bug report to ICU: http://bugs.icu-project.org/trac/ticket/7924
     if (!test_line.empty() || !ref_line.empty()) {
-      BOOST_CHECK_EQUAL(ref_line, test_line);
+      CHECK_EQ(ref_line, test_line);
     }
   }
-  BOOST_CHECK_THROW(test.get(), EndOfFileException);
-  BOOST_REQUIRE(!pclose(catter));
+  CHECK_THROWS_AS(test.get(), EndOfFileException);
+  REQUIRE(!pclose(catter));
 }
 #endif
 
 #ifdef HAVE_ZLIB
 
 // gzip file
-BOOST_AUTO_TEST_CASE(PlainZipReadLine) {
+TEST_CASE("PlainZipReadLine") {
   std::string location(FileLocation());
   std::fstream ref(location.c_str(), std::ios::in);
 
   std::string command("gzip <\"");
   command += location + "\" >\"" + location + "\".gz";
 
-  BOOST_REQUIRE_EQUAL(0, system(command.c_str()));
+  REQUIRE_EQ(0, system(command.c_str()));
   FilePiece test((location + ".gz").c_str(), NULL, 1);
   unlink((location + ".gz").c_str());
   std::string ref_line;
@@ -118,23 +118,23 @@ BOOST_AUTO_TEST_CASE(PlainZipReadLine) {
     StringPiece test_line(test.ReadLine());
     // I submitted a bug report to ICU: http://bugs.icu-project.org/trac/ticket/7924
     if (!test_line.empty() || !ref_line.empty()) {
-      BOOST_CHECK_EQUAL(ref_line, test_line);
+      CHECK_EQ(ref_line, test_line);
     }
   }
-  BOOST_CHECK_THROW(test.get(), EndOfFileException);
+  CHECK_THROWS_AS(test.get(), EndOfFileException);
 }
 
 // gzip stream.  Apple doesn't like popen, fileno, dup.  This is an issue with
 // the test.
 #if !defined __APPLE__ && !defined __MINGW32__
-BOOST_AUTO_TEST_CASE(StreamZipReadLine) {
+TEST_CASE("StreamZipReadLine") {
   std::fstream ref(FileLocation().c_str(), std::ios::in);
 
   std::string command("gzip <\"");
   command += FileLocation() + "\"";
 
   FILE * catter = popen(command.c_str(), "r");
-  BOOST_REQUIRE(catter);
+  REQUIRE(catter);
 
   FilePiece test(dup(fileno(catter)), "file_piece.cc.gz", NULL, 1);
   std::string ref_line;
@@ -142,17 +142,17 @@ BOOST_AUTO_TEST_CASE(StreamZipReadLine) {
     StringPiece test_line(test.ReadLine());
     // I submitted a bug report to ICU: http://bugs.icu-project.org/trac/ticket/7924
     if (!test_line.empty() || !ref_line.empty()) {
-      BOOST_CHECK_EQUAL(ref_line, test_line);
+      CHECK_EQ(ref_line, test_line);
     }
   }
-  BOOST_CHECK_THROW(test.get(), EndOfFileException);
-  BOOST_REQUIRE(!pclose(catter));
+  CHECK_THROWS_AS(test.get(), EndOfFileException);
+  REQUIRE(!pclose(catter));
 }
 #endif // __APPLE__
 
 #endif // HAVE_ZLIB
 
-BOOST_AUTO_TEST_CASE(Numbers) {
+TEST_CASE("Numbers") {
   scoped_fd file(MakeTemp(FileLocation()));
   const float floating = 3.2;
   {
@@ -161,11 +161,11 @@ BOOST_AUTO_TEST_CASE(Numbers) {
   }
   SeekOrThrow(file.get(), 0);
   util::FilePiece f(file.release());
-  BOOST_CHECK_THROW(f.ReadULong(), ParseNumberException);
-  BOOST_CHECK_EQUAL("94389483984398493890287", f.ReadDelimited());
+  CHECK_THROWS_AS(f.ReadULong(), ParseNumberException);
+  CHECK_EQ("94389483984398493890287", f.ReadDelimited());
   // Yes, exactly equal.  Isn't double-conversion wonderful?
-  BOOST_CHECK_EQUAL(floating, f.ReadFloat());
-  BOOST_CHECK_EQUAL(5, f.ReadULong());
+  CHECK_EQ(floating, f.ReadFloat());
+  CHECK_EQ(5, f.ReadULong());
 }
 
 } // namespace

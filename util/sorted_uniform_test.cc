@@ -6,8 +6,8 @@
 #include <boost/scoped_array.hpp>
 #include <boost/unordered_map.hpp>
 
-#define BOOST_TEST_MODULE SortedUniformTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <algorithm>
 #include <limits>
@@ -50,18 +50,18 @@ template <class Key, class Value> void Check(const Entry<Key, Value> *begin, con
   It i = NULL;
   bool ret = SortedUniformFind<It, Accessor<Key>, Pivot64>(Accessor<Key>(), begin, end, key, i);
   if (ref == reference.end()) {
-    BOOST_CHECK(!ret);
+    CHECK_FALSE(ret);
   } else {
-    BOOST_REQUIRE(ret);
-    BOOST_CHECK_EQUAL(ref->second, i->GetValue());
+    REQUIRE(ret);
+    CHECK_EQ(ref->second, i->GetValue());
   }
 }
 
-BOOST_AUTO_TEST_CASE(empty) {
+TEST_CASE("empty") {
   typedef const Entry<uint64_t, float> T;
   const T *i;
   bool ret = SortedUniformFind<const T*, Accessor<uint64_t>, Pivot64>(Accessor<uint64_t>(), (const T*)NULL, (const T*)NULL, (uint64_t)10, i);
-  BOOST_CHECK(!ret);
+  CHECK_FALSE(ret);
 }
 
 template <class Key> void RandomTest(Key upper, size_t entries, size_t queries) {
@@ -99,27 +99,27 @@ template <class Key> void RandomTest(Key upper, size_t entries, size_t queries) 
   }
 }
 
-BOOST_AUTO_TEST_CASE(basic) {
+TEST_CASE("basic") {
   RandomTest<uint8_t>(11, 10, 200);
 }
 
-BOOST_AUTO_TEST_CASE(tiny_dense_random) {
+TEST_CASE("tiny_dense_random") {
   RandomTest<uint8_t>(11, 50, 200);
 }
 
-BOOST_AUTO_TEST_CASE(small_dense_random) {
+TEST_CASE("small_dense_random") {
   RandomTest<uint8_t>(100, 100, 200);
 }
 
-BOOST_AUTO_TEST_CASE(small_sparse_random) {
+TEST_CASE("small_sparse_random") {
   RandomTest<uint8_t>(200, 15, 200);
 }
 
-BOOST_AUTO_TEST_CASE(medium_sparse_random) {
+TEST_CASE("medium_sparse_random") {
   RandomTest<uint16_t>(32000, 1000, 2000);
 }
 
-BOOST_AUTO_TEST_CASE(sparse_random) {
+TEST_CASE("sparse_random") {
   RandomTest<uint64_t>(std::numeric_limits<uint64_t>::max(), 100000, 2000);
 }
 

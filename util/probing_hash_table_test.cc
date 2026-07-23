@@ -3,8 +3,8 @@
 #include "murmur_hash.hh"
 #include "scoped.hh"
 
-#define BOOST_TEST_MODULE ProbingHashTableTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include <boost/scoped_array.hpp>
 #include <boost/functional/hash.hpp>
 #include <cstdio>
@@ -36,22 +36,22 @@ struct Entry {
 
 typedef ProbingHashTable<Entry, boost::hash<unsigned char> > Table;
 
-BOOST_AUTO_TEST_CASE(simple) {
+TEST_CASE("simple") {
   size_t size = Table::Size(10, 1.2);
   boost::scoped_array<char> mem(new char[size]);
   memset(mem.get(), 0, size);
 
   Table table(mem.get(), size);
   const Entry *i = NULL;
-  BOOST_CHECK(!table.Find(2, i));
+  CHECK_FALSE(table.Find(2, i));
   Entry to_ins;
   to_ins.key = 3;
   to_ins.value = 328920;
   table.Insert(to_ins);
-  BOOST_REQUIRE(table.Find(3, i));
-  BOOST_CHECK_EQUAL(3, i->GetKey());
-  BOOST_CHECK_EQUAL(static_cast<uint64_t>(328920), i->GetValue());
-  BOOST_CHECK(!table.Find(2, i));
+  REQUIRE(table.Find(3, i));
+  CHECK_EQ(3, i->GetKey());
+  CHECK_EQ(static_cast<uint64_t>(328920), i->GetValue());
+  CHECK_FALSE(table.Find(2, i));
 }
 
 struct Entry64 {
@@ -76,7 +76,7 @@ struct MurmurHashEntry64 {
 
 typedef ProbingHashTable<Entry64, MurmurHashEntry64> Table64;
 
-BOOST_AUTO_TEST_CASE(Double) {
+TEST_CASE("Double") {
   for (std::size_t initial = 19; initial < 30; ++initial) {
     size_t size = Table64::Size(initial, 1.2);
     scoped_malloc mem(MallocOrThrow(size));

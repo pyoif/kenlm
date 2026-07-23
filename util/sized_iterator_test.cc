@@ -1,7 +1,7 @@
 #include "sized_iterator.hh"
 
-#define BOOST_TEST_MODULE SizedIteratorTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace util { namespace {
 
@@ -11,12 +11,12 @@ struct CompareChar {
   }
 };
 
-BOOST_AUTO_TEST_CASE(sort) {
+TEST_CASE("sort") {
   char items[3] = {1, 2, 0};
   SizedSort(items, items + 3, 1, CompareChar());
-  BOOST_CHECK_EQUAL(0, items[0]);
-  BOOST_CHECK_EQUAL(1, items[1]);
-  BOOST_CHECK_EQUAL(2, items[2]);
+  CHECK_EQ(0, items[0]);
+  CHECK_EQ(1, items[1]);
+  CHECK_EQ(2, items[2]);
 }
 
 }} // namespace anonymous util

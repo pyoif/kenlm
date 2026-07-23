@@ -1,8 +1,8 @@
 #define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
-#define BOOST_TEST_MODULE FakeOStreamTest
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include "string_stream.hh"
-#include <boost/test/included/unit_test.hpp>
+#include <doctest/doctest.h>
 #include <boost/lexical_cast.hpp>
 
 #include <cstddef>
@@ -13,7 +13,7 @@ namespace util { namespace {
 template <class T> void TestEqual(const T value) {
   StringStream strme;
   strme << value;
-  BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(value), strme.str());
+  CHECK_EQ(boost::lexical_cast<std::string>(value), strme.str());
 }
 
 template <class T> void TestCorners() {
@@ -24,7 +24,7 @@ template <class T> void TestCorners() {
   TestEqual(static_cast<T>(1));
 }
 
-BOOST_AUTO_TEST_CASE(Integer) {
+TEST_CASE("Integer") {
   TestCorners<char>();
   TestCorners<signed char>();
   TestCorners<unsigned char>();
@@ -50,11 +50,11 @@ BOOST_AUTO_TEST_CASE(Integer) {
 
 enum TinyEnum { EnumValue };
 
-BOOST_AUTO_TEST_CASE(EnumCase) {
+TEST_CASE("EnumCase") {
   TestEqual(EnumValue);
 }
 
-BOOST_AUTO_TEST_CASE(Strings) {
+TEST_CASE("Strings") {
   TestEqual("foo");
   const char *a = "bar";
   TestEqual(a);
@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_CASE(Strings) {
 
   StringStream out;
   out << "a" << non_const << 'c';
-  BOOST_CHECK_EQUAL("abcc", out.str());
+  CHECK_EQ("abcc", out.str());
 
   // Now test as a separate object.
   StringStream stream;
   stream << "a" << non_const << 'c' << piece;
-  BOOST_CHECK_EQUAL("abccabcdef", stream.str());
+  CHECK_EQ("abccabcdef", stream.str());
 }
 
 }} // namespaces

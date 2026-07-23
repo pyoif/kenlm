@@ -1,18 +1,18 @@
 #include "pcqueue.hh"
 
-#define BOOST_TEST_MODULE PCQueueTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace util {
 namespace {
 
-BOOST_AUTO_TEST_CASE(SingleThread) {
+TEST_CASE("SingleThread") {
   PCQueue<int> queue(10);
   for (int i = 0; i < 10; ++i) {
     queue.Produce(i);
   }
   for (int i = 0; i < 10; ++i) {
-    BOOST_CHECK_EQUAL(i, queue.Consume());
+    CHECK_EQ(i, queue.Consume());
   }
 }
 

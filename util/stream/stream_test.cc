@@ -3,14 +3,14 @@
 #include "stream.hh"
 #include "../file.hh"
 
-#define BOOST_TEST_MODULE StreamTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <unistd.h>
 
 namespace util { namespace stream { namespace {
 
-BOOST_AUTO_TEST_CASE(StreamTest) {
+TEST_CASE("StreamTest") {
   scoped_fd in(MakeTemp("io_test_temp"));
   for (uint64_t i = 0; i < 100000; ++i) {
     WriteOrThrow(in.get(), &i, sizeof(uint64_t));
@@ -27,9 +27,9 @@ BOOST_AUTO_TEST_CASE(StreamTest) {
   chain >> Read(in.get()) >> s >> kRecycle;
   uint64_t i = 0;
   for (; s; ++s, ++i) {
-    BOOST_CHECK_EQUAL(i, *static_cast<const uint64_t*>(s.Get()));
+    CHECK_EQ(i, *static_cast<const uint64_t*>(s.Get()));
   }
-  BOOST_CHECK_EQUAL(100000ULL, i);
+  CHECK_EQ(100000ULL, i);
 }
 
 }}} // namespaces

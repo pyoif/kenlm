@@ -1,19 +1,19 @@
 #include "multi_intersection.hh"
 
-#define BOOST_TEST_MODULE MultiIntersectionTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 namespace util {
 namespace {
 
-BOOST_AUTO_TEST_CASE(Empty) {
+TEST_CASE("Empty") {
   std::vector<boost::iterator_range<const unsigned int*> > sets;
 
   sets.push_back(boost::iterator_range<const unsigned int*>(static_cast<const unsigned int*>(NULL), static_cast<const unsigned int*>(NULL)));
-  BOOST_CHECK(!FirstIntersection(sets));
+  CHECK_FALSE(FirstIntersection(sets));
 }
 
-BOOST_AUTO_TEST_CASE(Single) {
+TEST_CASE("Single") {
   std::vector<unsigned int> nums;
   nums.push_back(1);
   nums.push_back(4);
@@ -23,15 +23,15 @@ BOOST_AUTO_TEST_CASE(Single) {
 
   boost::optional<unsigned int> ret(FirstIntersection(sets));
 
-  BOOST_REQUIRE(ret);
-  BOOST_CHECK_EQUAL(static_cast<unsigned int>(1), *ret);
+  REQUIRE(ret);
+  CHECK_EQ(static_cast<unsigned int>(1), *ret);
 }
 
 template <class T, unsigned int len> boost::iterator_range<const T*> RangeFromArray(const T (&arr)[len]) {
   return boost::iterator_range<const T*>(arr, arr + len);
 }
 
-BOOST_AUTO_TEST_CASE(MultiNone) {
+TEST_CASE("MultiNone") {
   unsigned int nums0[] = {1, 3, 4, 22};
   unsigned int nums1[] = {2, 5, 12};
   unsigned int nums2[] = {4, 17};
@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_CASE(MultiNone) {
   sets.push_back(RangeFromArray(nums1));
   sets.push_back(RangeFromArray(nums2));
 
-  BOOST_CHECK(!FirstIntersection(sets));
+  CHECK_FALSE(FirstIntersection(sets));
 }
 
-BOOST_AUTO_TEST_CASE(MultiOne) {
+TEST_CASE("MultiOne") {
   unsigned int nums0[] = {1, 3, 4, 17, 22};
   unsigned int nums1[] = {2, 5, 12, 17};
   unsigned int nums2[] = {4, 17};
@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(MultiOne) {
   sets.push_back(RangeFromArray(nums2));
 
   boost::optional<unsigned int> ret(FirstIntersection(sets));
-  BOOST_REQUIRE(ret);
-  BOOST_CHECK_EQUAL(static_cast<unsigned int>(17), *ret);
+  REQUIRE(ret);
+  CHECK_EQ(static_cast<unsigned int>(17), *ret);
 }
 
 } // namespace

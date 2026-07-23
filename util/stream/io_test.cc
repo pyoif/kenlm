@@ -3,14 +3,14 @@
 #include "chain.hh"
 #include "../file.hh"
 
-#define BOOST_TEST_MODULE IOTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <unistd.h>
 
 namespace util { namespace stream { namespace {
 
-BOOST_AUTO_TEST_CASE(CopyFile) {
+TEST_CASE("CopyFile") {
   std::string temps("io_test_temp");
 
   scoped_fd in(MakeTemp(temps));
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(CopyFile) {
   for (uint64_t i = 0; i < 100000; ++i) {
     uint64_t got;
     ReadOrThrow(out.get(), &got, sizeof(uint64_t));
-    BOOST_CHECK_EQUAL(i, got);
+    CHECK_EQ(i, got);
   }
 }
 

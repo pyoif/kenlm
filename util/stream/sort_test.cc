@@ -1,7 +1,7 @@
 #include "sort.hh"
 
-#define BOOST_TEST_MODULE SortTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <algorithm>
 
@@ -30,7 +30,7 @@ struct Putter {
   std::vector<uint64_t> &shuffled_;
 };
 
-BOOST_AUTO_TEST_CASE(FromShuffled) {
+TEST_CASE("FromShuffled") {
   std::vector<uint64_t> shuffled;
   shuffled.reserve(kSize);
   for (uint64_t i = 0; i < kSize; ++i) {
@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(FromShuffled) {
   Stream sorted;
   chain >> sorted >> kRecycle;
   for (uint64_t i = 0; i < kSize; ++i, ++sorted) {
-    BOOST_CHECK_EQUAL(i, *static_cast<const uint64_t*>(sorted.Get()));
+    CHECK_EQ(i, *static_cast<const uint64_t*>(sorted.Get()));
   }
-  BOOST_CHECK(!sorted);
+  CHECK_FALSE(sorted);
 }
 
 }}} // namespaces

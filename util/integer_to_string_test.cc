@@ -2,8 +2,8 @@
 #include "integer_to_string.hh"
 #include "string_piece.hh"
 
-#define BOOST_TEST_MODULE IntegerToStringTest
-#include <boost/test/included/unit_test.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include <boost/lexical_cast.hpp>
 
 #include <limits>
@@ -16,10 +16,10 @@ template <class T> void TestValue(const T value) {
   StringPiece result(buf, ToString(value, buf) - buf);
   BOOST_REQUIRE_GE(static_cast<std::size_t>(ToStringBuf<T>::kBytes), result.size());
   if (value) {
-    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(value), result);
+    CHECK_EQ(boost::lexical_cast<std::string>(value), result);
   } else {
     // Platforms can do void * as 0x0 or 0.
-    BOOST_CHECK(result == "0x0" || result == "0");
+    CHECK(result == "0x0" || result == "0");
   }
 }
 
@@ -31,7 +31,7 @@ template <class T> void TestCorners() {
   TestValue((T)1);
 }
 
-BOOST_AUTO_TEST_CASE(Corners) {
+TEST_CASE("Corners") {
   TestCorners<uint16_t>();
   TestCorners<uint32_t>();
   TestCorners<uint64_t>();
@@ -48,7 +48,7 @@ template <class T> void TestAll() {
   TestValue(std::numeric_limits<T>::max());
 }
 
-BOOST_AUTO_TEST_CASE(Short) {
+TEST_CASE("Short") {
   TestAll<uint16_t>();
   TestAll<int16_t>();
 }
@@ -61,14 +61,14 @@ template <class T> void Test10s() {
   }
 }
 
-BOOST_AUTO_TEST_CASE(Tens) {
+TEST_CASE("Tens") {
   Test10s<uint64_t>();
   Test10s<int64_t>();
   Test10s<uint32_t>();
   Test10s<int32_t>();
 }
 
-BOOST_AUTO_TEST_CASE(Pointers) {
+TEST_CASE("Pointers") {
   for (uintptr_t i = 1; i < std::numeric_limits<uintptr_t>::max() / 10; i *= 10) {
     TestValue((const void*)i);
   }
