@@ -102,7 +102,6 @@ template <class Filter, class OutputBuffer, class RealOutput> class Controller {
     Controller(const Controller &) = delete;
     Controller &operator=(const Controller &) = delete;
   private:
-  private:
     typedef ThreadBatch<OutputBuffer> Batch;
 
   public:

@@ -6,8 +6,6 @@
 #include "../../util/string_piece.hh"
 
 #include <memory>
-#include <mutex>
-#include <thread>
 
 /* Wrapper to NPLM "by Ashish Vaswani, with contributions from David Chiang
  * and Victoria Fossum."

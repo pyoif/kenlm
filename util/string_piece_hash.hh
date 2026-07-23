@@ -35,8 +35,9 @@ struct StringPieceCompatibleEquals {
   }
 };
 
-// std::unordered_map does not support custom hash/equals in find().
-// Use std::string conversion for lookup.
+// std::unordered_map std::hash<std::string> works for StringPiece via implicit
+// conversion when C++17 transparent hash not available. FindStringPiece
+// explictly constructs std::string for lookup compatibility.
 template <class T> typename T::const_iterator FindStringPiece(const T &t, const StringPiece &key) {
   return t.find(std::string(key.data(), key.size()));
 }
