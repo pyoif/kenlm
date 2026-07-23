@@ -11,17 +11,15 @@ jobs:
     runs-on: macOS-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Install Boost
       run: |
-        brew install boost
-        brew install libomp
-        brew install eigen
+        brew install boost eigen libomp
     - name: cmake
       run: |
         cmake -E make_directory build
         cd build
-        cmake ..
+        cmake -DCOMPILE_TESTS=ON ..
     - name: Compile
       working-directory: build
       run: cmake --build . -j2
