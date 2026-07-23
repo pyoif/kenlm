@@ -12,9 +12,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Install Boost
+    - name: Install dependencies
       run: |
-        brew install boost eigen libomp
+        brew install eigen libomp
     - name: cmake
       run: |
         cmake -E make_directory build
