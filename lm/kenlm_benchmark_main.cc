@@ -4,11 +4,13 @@
 #include "../util/file_piece.hh"
 #include "../util/usage.hh"
 #include "../util/thread_pool.hh"
+#include "../util/range.hh"
 
-#include <boost/range/iterator_range.hpp>
-#include <boost/program_options.hpp>
+#include <CLI/CLI.hpp>
 
 #include <iostream>
+#include <thread>
+#include <cstring>
 
 #include <stdint.h>
 
@@ -37,7 +39,7 @@ template <class Model, class Width> class Worker {
     // Destructors happen in the main thread, so there's no race for add_total_.
     ~Worker() { add_total_ += total_; }
 
-    typedef boost::iterator_range<Width *> Request;
+    typedef util::Range<Width *> Request;
 
     void operator()(Request request) {
       const lm::ngram::State *const begin_state = &model_.BeginSentenceState();
@@ -90,18 +92,18 @@ template <class Model, class Width> void QueryFromBytes(const Model &model, cons
   double loaded_wall;
   uint64_t queries = 0;
   {
-    util::RecyclingThreadPool<Worker<Model, Width> > pool(total_queue, config.threads, Worker<Model, Width>(model, total), boost::iterator_range<Width *>((Width*)0, (Width*)0));
+    util::RecyclingThreadPool<Worker<Model, Width> > pool(total_queue, config.threads, Worker<Model, Width>(model, total), util::Range<Width *>((Width*)0, (Width*)0));
 
     for (std::size_t i = 0; i < total_queue; ++i) {
-      pool.PopulateRecycling(boost::iterator_range<Width *>(&backing[i * config.buf_per_thread], &backing[i * config.buf_per_thread]));
+      pool.PopulateRecycling(util::Range<Width *>(&backing[i * config.buf_per_thread], &backing[i * config.buf_per_thread]));
     }
 
     loaded_cpu = util::CPUTime();
     loaded_wall = util::WallTime();
     out << "To Load, CPU: " << loaded_cpu << " Wall: " << loaded_wall << '\n';
-    boost::iterator_range<Width *> overhang((Width*)0, (Width*)0);
+    util::Range<Width *> overhang((Width*)0, (Width*)0);
     while (true) {
-      boost::iterator_range<Width *> buf = pool.Consume();
+      util::Range<Width *> buf = pool.Consume();
       std::memmove(buf.begin(), overhang.begin(), overhang.size() * sizeof(Width));
       std::size_t got = util::ReadOrEOF(config.fd_in, buf.begin() + overhang.size(), (config.buf_per_thread - overhang.size()) * sizeof(Width));
       if (!got && overhang.empty()) break;
@@ -112,8 +114,8 @@ template <class Model, class Width> void QueryFromBytes(const Model &model, cons
         UTIL_THROW_IF2(last_eos <= buf.begin(), "Encountered a sentence longer than the buffer size of " << config.buf_per_thread << " words.  Rerun with increased buffer size. TODO: adaptable buffer");
         if (*last_eos == kEOS) break;
       }
-      buf = boost::iterator_range<Width*>(buf.begin(), last_eos + 1);
-      overhang = boost::iterator_range<Width*>(last_eos + 1, read_end);
+      buf = util::Range<Width*>(buf.begin(), last_eos + 1);
+      overhang = util::Range<Width*>(last_eos + 1, read_end);
       queries += buf.size();
       pool.Produce(buf);
     }
@@ -193,18 +195,26 @@ int main(int argc, char *argv[]) {
     Config config;
     config.fd_in = 0;
     std::string model;
-    namespace po = boost::program_options;
-    po::options_description options("Benchmark options");
-    options.add_options()
-      ("help,h", po::bool_switch(), "Show help message")
-      ("model,m", po::value<std::string>(&model)->required(), "Model to query or convert vocab ids")
-      ("threads,t", po::value<std::size_t>(&config.threads)->default_value(boost::thread::hardware_concurrency()), "Threads to use (querying only; TODO vocab conversion)")
-      ("buffer,b", po::value<std::size_t>(&config.buf_per_thread)->default_value(4096), "Number of words to buffer per task.")
-      ("vocab,v", po::bool_switch(), "Convert strings to vocab ids")
-      ("query,q", po::bool_switch(), "Query from vocab ids");
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, options), vm);
-    if (argc == 1 || vm["help"].as<bool>()) {
+
+    CLI::App app{"Benchmark options"};
+    bool help = false;
+    bool vocab_mode = false;
+    bool query_mode = false;
+    app.add_flag("-h,--help", help, "Show help message");
+    app.add_option("-m,--model", model, "Model to query or convert vocab ids")->required();
+    app.add_option("-t,--threads", config.threads, "Threads to use (querying only; TODO vocab conversion)")
+      ->default_val(std::thread::hardware_concurrency());
+    app.add_option("-b,--buffer", config.buf_per_thread, "Number of words to buffer per task.")->default_val(4096);
+    app.add_flag("-v,--vocab", vocab_mode, "Convert strings to vocab ids");
+    app.add_flag("-q,--query", query_mode, "Query from vocab ids");
+
+    try {
+      app.parse(argc, argv);
+    } catch (const CLI::ParseError &e) {
+      return app.exit(e);
+    }
+
+    if (help) {
       std::cerr << "Benchmark program for KenLM.  Intended usage:\n"
         << "#Convert text to vocabulary ids offline.  These ids are tied to a model.\n"
         << argv[0] << " -v -m $model <$text >$text.vocab\n"
@@ -214,12 +224,12 @@ int main(int argc, char *argv[]) {
         << argv[0] << " -q -m $model <$text.vocab\n";
       return 0;
     }
-    po::notify(vm);
-    if (!(vm["vocab"].as<bool>() ^ vm["query"].as<bool>())) {
+
+    if (!(vocab_mode ^ query_mode)) {
       std::cerr << "Specify exactly one of -v (vocab conversion) or -q (query)." << std::endl;
       return 0;
     }
-    config.query = vm["query"].as<bool>();
+    config.query = query_mode;
     if (!config.threads) {
       std::cerr << "Specify a non-zero number of threads with -t." << std::endl;
     }
