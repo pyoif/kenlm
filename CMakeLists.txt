@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 4.1)
+cmake_minimum_required(VERSION 3.28)
 
-# CMake 4.1: Boost Config mode native, FindBoost module retired.
+# CMake 3.28 is latest on all major GitHub Actions runners (ubuntu-24.04, windows-2025, macos-15).
+# Boost/Eigen use Config mode via find_package.
 
 if (WIN32)
     set(Boost_USE_STATIC_LIBS OFF)
