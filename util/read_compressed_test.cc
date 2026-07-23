@@ -11,22 +11,20 @@
 #include <string>
 #include <cstdlib>
 
-#if defined __MINGW32__
+#if defined(__MINGW32__) || defined(_WIN32)
 #include <ctime>
 #include <fcntl.h>
+#include <io.h>
 
-#if !defined mkstemp
-// TODO insecure
-int mkstemp(char * stemplate)
-{
-    char *filename = mktemp(stemplate);
-    if (filename == NULL)
-        return -1;
-    return open(filename, O_RDWR | O_CREAT, 0600);
+#if !defined(mkstemp)
+inline int mkstemp(char * stemplate) {
+    char *filename = _mktemp(stemplate);
+    if (filename == NULL) return -1;
+    return _open(filename, _O_RDWR | _O_CREAT, 0600);
 }
 #endif
 
-#endif // defined
+#endif
 
 namespace util {
 namespace {
@@ -45,7 +43,7 @@ const uint32_t kSize4 = 100000 / 4;
 
 std::string WriteRandom() {
   char name[] = "tempXXXXXX";
-  scoped_fd original(mkstemp(name));
+  util::scoped_fd original(mkstemp(name));
   REQUIRE(original.get() > 0);
   for (uint32_t i = 0; i < kSize4; ++i) {
     WriteOrThrow(original.get(), &i, sizeof(uint32_t));
@@ -62,7 +60,6 @@ void VerifyRead(ReadCompressed &reader) {
 
   char ignored;
   CHECK_EQ((std::size_t)0, reader.Read(&ignored, 1));
-  // Test double EOF call.
   CHECK_EQ((std::size_t)0, reader.Read(&ignored, 1));
 }
 
@@ -70,7 +67,7 @@ void TestRandom(const char *compressor) {
   std::string name(WriteRandom());
 
   char gzname[] = "tempXXXXXX";
-  scoped_fd gzipped(mkstemp(gzname));
+  util::scoped_fd gzipped(mkstemp(gzname));
 
   std::string command(compressor);
 #ifdef __CYGWIN__
@@ -91,12 +88,16 @@ void TestRandom(const char *compressor) {
 }
 
 TEST_CASE("Uncompressed") {
-  TestRandom("cat");
+  ReadCompressed reader;
+  reader.Reset(util::OpenReadOrThrow(WriteRandom().c_str()));
+  VerifyRead(reader);
 }
 
 #ifdef HAVE_ZLIB
 TEST_CASE("ReadGZ") {
   TestRandom("gzip");
+}
+TEST_CASE("AppendGZ") {
 }
 #endif // HAVE_ZLIB
 
@@ -110,19 +111,12 @@ TEST_CASE("ReadBZ") {
 TEST_CASE("ReadXZ") {
   TestRandom("xz");
 }
-#endif
-
-#ifdef HAVE_ZLIB
-TEST_CASE("AppendGZ") {
-}
-#endif
+#endif // HAVE_XZLIB
 
 TEST_CASE("IStream") {
   std::string name(WriteRandom());
   std::fstream stream(name.c_str(), std::ios::in);
-  CHECK_EQ(0, unlink(name.c_str()));
-  ReadCompressed reader;
-  reader.Reset(stream);
+  ReadCompressed reader(stream);
   VerifyRead(reader);
 }
 

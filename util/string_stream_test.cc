@@ -1,4 +1,3 @@
-#define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include "string_stream.hh"
@@ -6,13 +5,20 @@
 
 #include <cstddef>
 #include <limits>
+#include <sstream>
 
 namespace util { namespace {
+
+template <class T> std::string ToStr(const T &value) {
+  std::ostringstream ss;
+  ss << value;
+  return ss.str();
+}
 
 template <class T> void TestEqual(const T value) {
   StringStream strme;
   strme << value;
-  CHECK_EQ(std::to_string(value), strme.str());
+  CHECK_EQ(ToStr(value), strme.str());
 }
 
 template <class T> void TestCorners() {
@@ -70,7 +76,6 @@ TEST_CASE("Strings") {
   out << "a" << non_const << 'c';
   CHECK_EQ("abcc", out.str());
 
-  // Now test as a separate object.
   StringStream stream;
   stream << "a" << non_const << 'c' << piece;
   CHECK_EQ("abccabcdef", stream.str());

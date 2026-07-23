@@ -24,9 +24,8 @@ TEST_CASE("Query") {
   ModelBuffer test(dir + "/" + endian + "endian/toy0");
   ngram::State ref_state, test_state;
   WordIndex a = ref.GetVocabulary().Index("a");
-  CHECK(static_cast<double>(ref.FullScore(ref.BeginSentenceState()) == doctest::Approx(static_cast<double>(a)).epsilon(static_cast<double>(ref_state) / 100.0)).prob,
-      test.SlowQuery(ref.BeginSentenceState(), a, test_state),
-      0.001);
+  CHECK(static_cast<double>(ref.FullScore(ref.BeginSentenceState(), a, ref_state).prob) ==
+        doctest::Approx(static_cast<double>(test.SlowQuery(ref.BeginSentenceState(), a, test_state))).epsilon(0.001 / 100.0));
   CHECK_EQ((unsigned)ref_state.length, (unsigned)test_state.length);
   CHECK_EQ(ref_state.words[0], test_state.words[0]);
   CHECK_EQ(ref_state.backoff[0], test_state.backoff[0]);
@@ -34,15 +33,13 @@ TEST_CASE("Query") {
 
   ngram::State ref_state2, test_state2;
   WordIndex b = ref.GetVocabulary().Index("b");
-  CHECK(static_cast<double>(ref.FullScore(ref_state) == doctest::Approx(static_cast<double>(b)).epsilon(static_cast<double>(ref_state2) / 100.0)).prob,
-      test.SlowQuery(test_state, b, test_state2),
-      0.001);
+  CHECK(static_cast<double>(ref.FullScore(ref_state, b, ref_state2).prob) ==
+        doctest::Approx(static_cast<double>(test.SlowQuery(test_state, b, test_state2))).epsilon(0.001 / 100.0));
   CHECK(ref_state2 == test_state2);
   CHECK_EQ(ref_state2.backoff[0], test_state2.backoff[0]);
 
-  CHECK(static_cast<double>(ref.FullScore(ref_state2) == doctest::Approx(static_cast<double>(0)).epsilon(static_cast<double>(ref_state) / 100.0)).prob,
-      test.SlowQuery(test_state2, 0, test_state),
-      0.001);
+  CHECK(static_cast<double>(ref.FullScore(ref_state2, 0, ref_state).prob) ==
+        doctest::Approx(static_cast<double>(test.SlowQuery(test_state2, 0, test_state))).epsilon(0.001 / 100.0));
   // The reference does state minimization but this doesn't.
 }
 

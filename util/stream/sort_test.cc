@@ -2,10 +2,15 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
+#include <random>
 
 #include <algorithm>
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 namespace util { namespace stream { namespace {
 
@@ -36,7 +41,7 @@ TEST_CASE("FromShuffled") {
   for (uint64_t i = 0; i < kSize; ++i) {
     shuffled.push_back(i);
   }
-  std::random_shuffle(shuffled.begin(), shuffled.end());
+  std::shuffle(shuffled.begin(), shuffled.end(), std::mt19937(std::random_device{}()));
 
   ChainConfig config;
   config.entry_size = 8;
@@ -56,7 +61,7 @@ TEST_CASE("FromShuffled") {
   for (uint64_t i = 0; i < kSize; ++i, ++sorted) {
     CHECK_EQ(i, *static_cast<const uint64_t*>(sorted.Get()));
   }
-  CHECK_FALSE(sorted);
+  CHECK(!sorted);
 }
 
 }}} // namespaces

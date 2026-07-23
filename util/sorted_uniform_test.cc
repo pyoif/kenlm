@@ -1,11 +1,11 @@
 #include "sorted_uniform.hh"
 
+#include <random>
 #include <memory>
 #include <unordered_map>
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-#include <random>
 
 #include <algorithm>
 #include <limits>
@@ -21,13 +21,8 @@ template <class KeyT, class ValueT> struct Entry {
   Key key;
   Value value;
 
-  Key GetKey() const {
-    return key;
-  }
-
-  Value GetValue() const {
-    return value;
-  }
+  Key GetKey() const { return key; }
+  Value GetValue() const { return value; }
 
   bool operator<(const Entry<Key,Value> &other) const {
     return key < other.key;
@@ -44,11 +39,10 @@ template <class KeyT> struct Accessor {
 template <class Key, class Value> void Check(const Entry<Key, Value> *begin, const Entry<Key, Value> *end, const std::unordered_map<Key, Value> &reference, const Key key) {
   typename std::unordered_map<Key, Value>::const_iterator ref = reference.find(key);
   typedef const Entry<Key, Value> *It;
-  // g++ can't tell that require will crash and burn.
   It i = NULL;
   bool ret = SortedUniformFind<It, Accessor<Key>, Pivot64>(Accessor<Key>(), begin, end, key, i);
   if (ref == reference.end()) {
-    CHECK_FALSE(ret);
+    CHECK(!ret);
   } else {
     REQUIRE(ret);
     CHECK_EQ(ref->second, i->GetValue());
@@ -59,15 +53,18 @@ TEST_CASE("empty") {
   typedef const Entry<uint64_t, float> T;
   const T *i;
   bool ret = SortedUniformFind<const T*, Accessor<uint64_t>, Pivot64>(Accessor<uint64_t>(), (const T*)NULL, (const T*)NULL, (uint64_t)10, i);
-  CHECK_FALSE(ret);
+  CHECK(!ret);
 }
 
 template <class Key> void RandomTest(Key upper, size_t entries, size_t queries) {
   typedef unsigned char Value;
   std::mt19937 rng;
-  std::uniform_int_distribution<Key> range_key(0, upper);
-  std::uniform_int_distribution<Value> range_value(0, 255);
-    
+  std::uniform_int_distribution<unsigned int> range_key(0, static_cast<unsigned int>(upper));
+  std::uniform_int_distribution<unsigned int> range_value(0, 255);
+
+  auto gen_key = [&]() { return static_cast<Key>(range_key(rng)); };
+  auto gen_value = [&]() { return static_cast<unsigned char>(range_value(rng)); };
+
   typedef Entry<Key, Value> Ent;
   std::vector<Ent> backing;
   std::unordered_map<Key, unsigned char> reference;
@@ -83,7 +80,6 @@ template <class Key> void RandomTest(Key upper, size_t entries, size_t queries) 
   }
   std::sort(backing.begin(), backing.end());
 
-  // Random queries.
   for (size_t i = 0; i < queries; ++i) {
     const Key key = gen_key();
     Check<Key, unsigned char>(&*backing.begin(), &*backing.end(), reference, key);

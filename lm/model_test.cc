@@ -41,7 +41,7 @@ const char *TestNoUnkLocation() {
 template <class Model> State GetState(const Model &model, const char *word, const State &in) {
   std::vector<WordIndex> context(in.length + 1);
   context[0] = model.GetVocabulary().Index(word);
-  std::copy(in.words, in.words + in.length, context + 1);
+  std::copy(in.words, in.words + in.length, context.data() + 1);
   State ret;
   model.GetState(context.data(), context.data() + in.length + 1, ret);
   return ret;
