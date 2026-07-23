@@ -1,5 +1,4 @@
 #include "../common/model_buffer.hh"
-#include "../common/size_option.hh"
 #include "pipeline.hh"
 #include "tune_instances.hh"
 #include "tune_weights.hh"
@@ -12,36 +11,11 @@
 #include <Eigen/Core>
 #pragma GCC diagnostic pop
 
-#include <boost/program_options.hpp>
+#include <CLI/CLI.hpp>
 
 #include <iostream>
+#include <string>
 #include <vector>
-
-namespace {
-void MungeWeightArgs(int argc, char *argv[], std::vector<const char *> &munged_args) {
-  // Boost program options doesn't -w 0.2 -0.1 because it thinks -0.1 is an
-  // option.  There appears to be no standard way to fix this without breaking
-  // single-dash arguments.  So here's a hack: put a -w before every number
-  // if it's within the scope of a weight argument.
-  munged_args.push_back(argv[0]);
-  char **inside_weights = NULL;
-  for (char **i = argv + 1; i < argv + argc; ++i) {
-    StringPiece arg(*i);
-    if (starts_with(arg, "-w") || starts_with(arg, "--w")) {
-      inside_weights = i;
-    } else if (inside_weights && arg.size() >= 2 && arg[0] == '-' && ((arg[1] >= '0' && arg[1] <= '9') || arg[1] == '.')) {
-      // If a negative number appears right after -w, don't add another -w.
-      // And do stay inside weights.
-      if (inside_weights + 1 != i) {
-        munged_args.push_back("-w");
-      }
-    } else if (starts_with(arg, "-")) {
-      inside_weights = NULL;
-    }
-    munged_args.push_back(*i);
-  }
-}
-} // namespace
 
 int main(int argc, char *argv[]) {
   try {
@@ -50,29 +24,39 @@ int main(int argc, char *argv[]) {
     lm::interpolate::InstancesConfig instances_config;
     std::vector<std::string> input_models;
     std::string tuning_file;
+    std::string ram_str, sort_block_str;
+    bool help = false;
+    bool just_tune = false;
 
-    namespace po = boost::program_options;
-    po::options_description options("Log-linear interpolation options");
-    options.add_options()
-      ("help,h", po::bool_switch(), "Show this help message")
-      ("model,m", po::value<std::vector<std::string> >(&input_models)->multitoken()->required(), "Models to interpolate, which must be in KenLM intermediate format.  The intermediate format can be generated using the --intermediate argument to lmplz.")
-      ("weight,w", po::value<std::vector<float> >(&pipe_config.lambdas)->multitoken(), "Interpolation weights")
-      ("tuning,t", po::value<std::string>(&tuning_file), "File to tune on: a text file with one sentence per line")
-      ("just_tune", po::bool_switch(), "Tune and print weights then quit")
-      ("temp_prefix,T", po::value<std::string>(&pipe_config.sort.temp_prefix)->default_value("/tmp/lm"), "Temporary file prefix")
-      ("memory,S", lm::SizeOption(pipe_config.sort.total_memory, util::GuessPhysicalMemory() ? "50%" : "1G"), "Sorting memory: this is a very rough guide")
-      ("sort_block", lm::SizeOption(pipe_config.sort.buffer_size, "64M"), "Block size");
-    po::variables_map vm;
+    CLI::App app{"Log-linear interpolation options"};
 
-    std::vector<const char *> munged_args;
-    MungeWeightArgs(argc, argv, munged_args);
+    app.add_flag("-h,--help", help, "Show this help message");
+    app.add_option("-m,--model", input_models, "Models to interpolate, which must be in KenLM intermediate format.  The intermediate format can be generated using the --intermediate argument to lmplz.")
+      ->required()
+      ->expected(-1);
+    app.add_option("-w,--weight", pipe_config.lambdas, "Interpolation weights")->expected(-1);
+    app.add_option("-t,--tuning", tuning_file, "File to tune on: a text file with one sentence per line");
+    app.add_flag("--just_tune", just_tune, "Tune and print weights then quit");
+    app.add_option("-T,--temp_prefix", pipe_config.sort.temp_prefix, "Temporary file prefix")
+      ->default_val("/tmp/lm");
+    app.add_option("-S,--memory", ram_str, "Sorting memory: this is a very rough guide")
+      ->default_val(util::GuessPhysicalMemory() ? "50%" : "1G");
+    app.add_option("--sort_block", sort_block_str, "Block size")->default_val("64M");
 
-    po::store(po::parse_command_line((int)munged_args.size(), &*munged_args.begin(), options), vm);
-    if (argc == 1 || vm["help"].as<bool>()) {
-      std::cerr << "Interpolate multiple models\n" << options << std::endl;
+    try {
+      app.parse(argc, argv);
+    } catch (const CLI::ParseError &e) {
+      return app.exit(e);
+    }
+
+    if (help) {
+      std::cerr << "Interpolate multiple models\n" << app.help() << std::endl;
       return 1;
     }
-    po::notify(vm);
+
+    pipe_config.sort.total_memory = util::ParseSize(ram_str);
+    pipe_config.sort.buffer_size = util::ParseSize(sort_block_str);
+
     instances_config.sort = pipe_config.sort;
     instances_config.model_read_chain_mem = instances_config.sort.buffer_size;
     instances_config.extension_write_chain_mem = instances_config.sort.total_memory;
@@ -96,13 +80,13 @@ int main(int argc, char *argv[]) {
       lm::interpolate::TuneWeights(util::OpenReadOrThrow(tuning_file.c_str()), model_names, instances_config, pipe_config.lambdas);
 
       std::cerr << "Final weights:";
-      std::ostream &to = vm["just_tune"].as<bool>() ? std::cout : std::cerr;
+      std::ostream &to = just_tune ? std::cout : std::cerr;
       for (std::vector<float>::const_iterator i = pipe_config.lambdas.begin(); i != pipe_config.lambdas.end(); ++i) {
         to << ' ' << *i;
       }
       to << std::endl;
     }
-    if (vm["just_tune"].as<bool>()) {
+    if (just_tune) {
       return 0;
     }
 

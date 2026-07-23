@@ -6,8 +6,7 @@
 #include "../../util/stream/sort.hh"
 #include "split_worker.hh"
 
-#include <boost/program_options.hpp>
-#include <boost/version.hpp>
+#include <CLI/CLI.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -40,21 +39,24 @@ int main(int argc, char *argv[]) {
   std::string TMP_DIR = "/tmp/";
 
   try {
-    namespace po = boost::program_options;
-    po::options_description options("canhazinterp Pass-3 options");
+    CLI::App app{"canhazinterp Pass-3 options"};
+    bool help = false;
 
-    options.add_options()
-      ("help,h", po::bool_switch(), "Show this help message")
-      ("ngrams,n", po::value<std::string>(&FILE_NAME), "ngrams file")
-      ("csortngrams,c", po::value<std::string>(&CONTEXT_SORTED_FILENAME), "context sorted ngrams file")
-      ("backoffs,b", po::value<std::string>(&BACKOFF_FILENAME), "backoffs file")
-      ("tmpdir,t", po::value<std::string>(&TMP_DIR), "tmp dir");
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, options), vm);
+    app.add_flag("-h,--help", help, "Show this help message");
+    app.add_option("-n,--ngrams", FILE_NAME, "ngrams file");
+    app.add_option("-c,--csortngrams", CONTEXT_SORTED_FILENAME, "context sorted ngrams file");
+    app.add_option("-b,--backoffs", BACKOFF_FILENAME, "backoffs file");
+    app.add_option("-t,--tmpdir", TMP_DIR, "tmp dir");
+
+    try {
+      app.parse(argc, argv);
+    } catch (const CLI::ParseError &e) {
+      return app.exit(e);
+    }
 
     // Display help
-    if(vm["help"].as<bool>()) {
-      std::cerr << "Usage: " << options << std::endl;
+    if (help) {
+      std::cerr << "Usage: " << app.help() << std::endl;
       return 1;
     }
   }
@@ -110,7 +112,7 @@ int main(int argc, char *argv[]) {
     // corresponding order's backoff and probability chains
     workers.push_back(
         new SplitWorker(i + 1, backoff_chains[i], prob_chains[i]));
-    ngram_inputs[i] >> boost::ref(*workers.back());
+    ngram_inputs[i] >> std::ref(*workers.back());
   }
 
   util::stream::SortConfig sort_cfg;
@@ -132,45 +134,7 @@ int main(int argc, char *argv[]) {
 
   // Set the sort output to be on the same chain
   for (std::size_t i = 0; i < prob_chains.size(); ++i) {
-    // The following call to Chain::Wait()
-    //     joins the threads owned by chains[i].
-    //
-    // As such the following call won't return
-    //     until all threads owned by chains[i] have completed.
-    //
-    // The following call also resets chain[i]
-    //     so that it can be reused
-    //     (including free'ing the memory previously used by the chain)
     prob_chains[i].Wait();
-
-    // In an ideal world (without memory restrictions)
-    //     we could merge all of the previously sorted blocks
-    //     by reading them all completely into memory
-    //     and then running merge sort over them.
-    //
-    // In the real world, we have memory restrictions;
-    //     depending on how many blocks we have,
-    //     and how much memory we can use to read from each block
-    //     (sort_config.buffer_size)
-    //     it may be the case that we have insufficient memory
-    //     to read sort_config.buffer_size of data from each block from disk.
-    //
-    // If this occurs, then it will be necessary to perform one or more rounds
-    // of merge sort on disk;
-    //     doing so will reduce the number of blocks that we will eventually
-    //     need to read from
-    //     when performing the final round of merge sort in memory.
-    //
-    // So, the following call determines whether it is necessary
-    //     to perform one or more rounds of merge sort on disk;
-    //     if such on-disk merge sorting is required, such sorting is performed.
-    //
-    // Finally, the following method launches a thread that calls
-    // OwningMergingReader.Run()
-    //     to perform the final round of merge sort in memory.
-    //
-    // Merge sort could have be invoked directly
-    //     so that merge sort memory doesn't coexist with Chain memory.
     sorts[i].Output(prob_chains[i]);
   }
 

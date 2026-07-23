@@ -8,8 +8,6 @@
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <Eigen/Dense>
 #pragma GCC diagnostic pop
-#include <boost/program_options.hpp>
-
 #include <iostream>
 
 namespace lm { namespace interpolate {
