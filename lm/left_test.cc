@@ -5,9 +5,8 @@
 
 #include <vector>
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-
+#include "../util/test_main.hh"
 
 namespace lm {
 namespace ngram {
@@ -17,7 +16,7 @@ namespace {
 #define VCheck(word, value) CHECK_EQ(m.GetVocabulary().Index(word), value);
 
 // Apparently some Boost versions use templates and are pretty strict about types matching.
-#define SLOPPY_CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(ref) == doctest::Approx(static_cast<double>(value)).epsilon(static_cast<double>(tol) / 100.0));
+#define SLOPPY_CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(static_cast<double>(ref)) == doctest::Approx(static_cast<double>(static_cast<double>(value))).epsilon(static_cast<double>(static_cast<double>(tol)) / 100.0));
 
 template <class M> void Short(const M &m) {
   ChartState base;
@@ -239,7 +238,7 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
   }
   CHECK_EQ(1, consider.left.length);
   CHECK_EQ(1, consider.right.length);
-  CHECK(!consider.left.full);
+  CHECK_FALSE(consider.left.full);
 
   ChartState higher;
   float higher_score;
@@ -251,7 +250,7 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
   SLOPPY_CHECK_CLOSE(-1.509559, higher_score, 0.001);
   CHECK_EQ(1, higher.left.length);
   CHECK_EQ(1, higher.right.length);
-  CHECK(!higher.left.full);
+  CHECK_FALSE(higher.left.full);
   VCheck("higher", higher.right.words[0]);
   SLOPPY_CHECK_CLOSE(-0.30103, higher.right.backoff[0], 0.001);
 
@@ -263,7 +262,7 @@ template <class M> void AlsoWouldConsiderHigher(const M &m) {
     SLOPPY_CHECK_CLOSE(-1.509559 - 1.687872 - 0.30103, score.Finish(), 0.001);
   }
   CHECK_EQ(2, consider_higher.left.length);
-  CHECK(!consider_higher.left.full);
+  CHECK_FALSE(consider_higher.left.full);
 
   ChartState full;
   {
@@ -349,7 +348,12 @@ template <class M> void FullGrow(const M &m) {
   }
 }
 
-const char *FileLocation() { return "test.arpa"; }
+const char *FileLocation() {
+  if (test_argc < 2) {
+    return "test.arpa";
+  }
+  return test_argv[1];
+}
 
 template <class M> void Everything() {
   Config config;

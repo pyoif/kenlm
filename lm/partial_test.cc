@@ -4,20 +4,24 @@
 #include "model.hh"
 #include "../util/tokenize_piece.hh"
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-
-#define CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(ref) == doctest::Approx(static_cast<double>(value)).epsilon(static_cast<double>(tol) / 100.0))
-
-#include <cmath>
-#include <string>
-#include <vector>
+#include "../util/test_main.hh"
 
 namespace lm {
 namespace ngram {
 namespace {
 
-const char *TestLocation() { return "test.arpa"; }
+const char *TestLocation() {
+  if (test_argc < 2) {
+    return "test.arpa";
+  }
+
+static RestProbingModel &GetModel() {
+  static RestProbingModel m(TestLocation(), SilentConfig());
+  return m;
+}
+  return test_argv[1];
+}
 
 Config SilentConfig() {
   Config config;
@@ -26,12 +30,11 @@ Config SilentConfig() {
   return config;
 }
 
-// Shared model instance — doctest doesn't have fixtures like Boost.Test.
-// Each TEST_CASE creates its own model.
-static RestProbingModel &GetModel() {
-  static RestProbingModel m(TestLocation(), SilentConfig());
-  return m;
-}
+struct ModelFixture {
+  ModelFixture() : m(TestLocation(), SilentConfig()) {}
+
+  RestProbingModel m;
+};
 
 TEST_CASE("SimpleBefore") {
   RestProbingModel &m = GetModel();
@@ -47,25 +50,25 @@ TEST_CASE("SimpleBefore") {
   reveal.words[0] = period;
   reveal.backoff[0] = -0.845098;
 
-  CHECK_CLOSE(0.0, RevealBefore(m, reveal, 0, false, left, right), 0.001);
+  CHECK(static_cast<double>(0.0) == doctest::Approx(static_cast<double>(RevealBefore(m, reveal, 0, false, left)).epsilon(static_cast<double>(right) / 100.0)), 0.001);
   CHECK_EQ(0, left.length);
-  CHECK(!left.full);
+  CHECK_FALSE(left.full);
   CHECK_EQ(1, right.length);
   CHECK_EQ(period, right.words[0]);
-  CHECK_CLOSE(-0.845098, right.backoff[0], 0.001);
+  CHECK(static_cast<double>(-0.845098) == doctest::Approx(static_cast<double>(right.backoff[0])).epsilon(static_cast<double>(0.001) / 100.0));
 
   WordIndex more = m.GetVocabulary().Index("more");
   reveal.words[1] = more;
   reveal.backoff[1] =  -0.4771212;
   reveal.length = 2;
-  CHECK_CLOSE(0.0, RevealBefore(m, reveal, 1, false, left, right), 0.001);
+  CHECK(static_cast<double>(0.0) == doctest::Approx(static_cast<double>(RevealBefore(m, reveal, 1, false, left)).epsilon(static_cast<double>(right) / 100.0)), 0.001);
   CHECK_EQ(0, left.length);
-  CHECK(!left.full);
+  CHECK_FALSE(left.full);
   CHECK_EQ(2, right.length);
   CHECK_EQ(period, right.words[0]);
   CHECK_EQ(more, right.words[1]);
-  CHECK_CLOSE(-0.845098, right.backoff[0], 0.001);
-  CHECK_CLOSE(-0.4771212, right.backoff[1], 0.001);
+  CHECK(static_cast<double>(-0.845098) == doctest::Approx(static_cast<double>(right.backoff[0])).epsilon(static_cast<double>(0.001) / 100.0));
+  CHECK(static_cast<double>(-0.4771212) == doctest::Approx(static_cast<double>(right.backoff[1])).epsilon(static_cast<double>(0.001) / 100.0));
 }
 
 TEST_CASE("AlsoWouldConsider") {
@@ -86,7 +89,8 @@ TEST_CASE("AlsoWouldConsider") {
   after.length = 1;
   after.pointers[0] = consider;
 
-  CHECK_CLOSE(-1.687872 - -0.2922095 - 0.30103, RevealAfter(m, current.left, current.right, after, 0), 0.001);
+  // adjustment for would consider
+  CHECK(static_cast<double>(-1.687872 - -0.2922095 - 0.30103) == doctest::Approx(static_cast<double>(RevealAfter(m, current.left, current.right, after)).epsilon(static_cast<double>(0) / 100.0)), 0.001);
 
   CHECK_EQ(2, current.left.length);
   CHECK_EQ(would, current.left.pointers[0]);
@@ -97,7 +101,9 @@ TEST_CASE("AlsoWouldConsider") {
   before.length = 1;
   before.words[0] = also;
   before.backoff[0] = -0.30103;
-  CHECK_CLOSE(-2 + 0.2922095 -3 + 1.988902, RevealBefore(m, before, 0, false, current.left, current.right), 0.001);
+  // r(would) = -0.2922095 [i would], r(would -> consider) = -1.988902 [b(would) + p(consider)]
+  // p(also -> would) = -2, p(also would -> consider) = -3
+  CHECK(static_cast<double>(-2 + 0.2922095 -3 + 1.988902) == doctest::Approx(static_cast<double>(RevealBefore(m, before, 0, false, current.left)).epsilon(static_cast<double>(current.right) / 100.0)), 0.001);
   CHECK_EQ(0, current.left.length);
   CHECK(current.left.full);
   CHECK_EQ(2, current.right.length);
@@ -124,7 +130,7 @@ TEST_CASE("EndSentence") {
   before.backoff[1] = 0.0;
 
   before.length = 1;
-  CHECK_CLOSE(-0.0410707, RevealBefore(m, before, 0, true, between.left, between.right), 0.001);
+  CHECK(static_cast<double>(-0.0410707) == doctest::Approx(static_cast<double>(RevealBefore(m, before, 0, true, between.left)).epsilon(static_cast<double>(between.right) / 100.0)), 0.001);
   CHECK_EQ(0, between.left.length);
 }
 
@@ -158,6 +164,7 @@ void CheckAdjustment(const RestProbingModel &model, float expect, const Right &b
   if (before_full) {
     got += RevealBefore(model, before, before.length, true, between.left, between.right);
   }
+  // Sometimes they're zero and BOOST_CHECK_CLOSE fails for this.
   CHECK(fabs(expect - got) < 0.001);
 }
 

@@ -5,8 +5,8 @@
 #include "file.hh"
 #include "scoped.hh"
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
+#include "test_main.hh"
 #include <fstream>
 #include <iostream>
 #include <cstdio>
@@ -17,8 +17,11 @@ namespace util {
 namespace {
 
 std::string FileLocation() {
-  // When run via ctest, argv[1] provides the test data directory.
-  return "file_piece.cc";
+  if (test_argc < 2) {
+    return "file_piece.cc";
+  }
+  std::string ret(test_argv[1]);
+  return ret;
 }
 
 /* istream */

@@ -7,8 +7,8 @@
 #include "../../util/stream/typed_stream.hh"
 #include "../../util/string_piece.hh"
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
+#include "../../util/test_main.hh"
 
 #include <vector>
 
@@ -21,6 +21,9 @@ TEST_CASE("Toy") {
   util::FileStream(test_input.get()) << "c\n";
 
   std::string dir("../common/test_data");
+  if (test_argc == 2) {
+    dir = test_argv[1];
+  }
 
 #if BYTE_ORDER == LITTLE_ENDIAN
   std::string endian = "little";
@@ -54,33 +57,32 @@ TEST_CASE("Toy") {
   const Matrix &ln_unigrams = inst.LNUnigrams();
 
   // <unk>=0
-  CHECK_CLOSE(-0.90309 * M_LN10, ln_unigrams(0, 0), 0.001);
-  CHECK_CLOSE(-1 * M_LN10, ln_unigrams(0, 1), 0.001);
+  CHECK(static_cast<double>(-0.90309 * M_LN10) == doctest::Approx(static_cast<double>(ln_unigrams(0)).epsilon(static_cast<double>(0) / 100.0)), 0.001);
+  CHECK(static_cast<double>(-1 * M_LN10) == doctest::Approx(static_cast<double>(ln_unigrams(0)).epsilon(static_cast<double>(1) / 100.0)), 0.001);
   // <s>=1 doesn't matter as long as it doesn't cause NaNs.
-  CHECK(!isnan(ln_unigrams(1, 0)));
-  CHECK(!isnan(ln_unigrams(1, 1)));
+  CHECK_FALSE(isnan(ln_unigrams(1, 0)));
+  CHECK_FALSE(isnan(ln_unigrams(1, 1)));
   // a = 2
-  CHECK_CLOSE(-0.46943438 * M_LN10, ln_unigrams(2, 0), 0.001);
-  CHECK_CLOSE(-0.6146491 * M_LN10, ln_unigrams(2, 1), 0.001);
+  CHECK(static_cast<double>(-0.46943438 * M_LN10) == doctest::Approx(static_cast<double>(ln_unigrams(2)).epsilon(static_cast<double>(0) / 100.0)), 0.001);
+  CHECK(static_cast<double>(-0.6146491 * M_LN10) == doctest::Approx(static_cast<double>(ln_unigrams(2)).epsilon(static_cast<double>(1) / 100.0)), 0.001);
   // </s> = 3
-  CHECK_CLOSE(-0.5720968 * M_LN10, ln_unigrams(3, 0), 0.001);
-  CHECK_CLOSE(-0.6146491 * M_LN10, ln_unigrams(3, 1), 0.001);
+  CHECK(static_cast<double>(-0.5720968 * M_LN10) == doctest::Approx(static_cast<double>(ln_unigrams(3)).epsilon(static_cast<double>(0) / 100.0)), 0.001);
+  CHECK(static_cast<double>(-0.6146491 * M_LN10) == doctest::Approx(static_cast<double>(ln_unigrams(3)).epsilon(static_cast<double>(1) / 100.0)), 0.001);
   // c = 4
-  CHECK_CLOSE(-0.90309 * M_LN10, ln_unigrams(4, 0), 0.001); // <unk>
-  CHECK_CLOSE(-0.7659168 * M_LN10, ln_unigrams(4, 1), 0.001);
+  CHECK(static_cast<double>(-0.90309 * M_LN10) == doctest::Approx(static_cast<double>(ln_unigrams(4)).epsilon(static_cast<double>(0) / 100.0)), 0.001); // <unk>
+  CHECK(static_cast<double>(-0.7659168 * M_LN10) == doctest::Approx(static_cast<double>(ln_unigrams(4)).epsilon(static_cast<double>(1) / 100.0)), 0.001);
   // too lazy to do b = 5.
 
   // Two instances:
   // <s> predicts c
   // <s> c predicts </s>
   REQUIRE_EQ(2, inst.NumInstances());
-  CHECK_CLOSE(-0.30103 * M_LN10, inst.LNBackoffs(0)(0), 0.001);
-  CHECK_CLOSE(-0.30103 * M_LN10, inst.LNBackoffs(0)(1), 0.001);
-
+  CHECK(static_cast<double>(-0.30103 * M_LN10) == doctest::Approx(static_cast<double>(inst.LNBackoffs(0)(0))).epsilon(static_cast<double>(0.001) / 100.0));
+  CHECK(static_cast<double>(-0.30103 * M_LN10) == doctest::Approx(static_cast<double>(inst.LNBackoffs(0)(1))).epsilon(static_cast<double>(0.001) / 100.0));
 
   // Backoffs of <s> c
-  CHECK_CLOSE(0.0, inst.LNBackoffs(1)(0), 0.001);
-  CHECK_CLOSE((-0.30103 - 0.30103) * M_LN10, inst.LNBackoffs(1)(1), 0.001);
+  CHECK(static_cast<double>(0.0) == doctest::Approx(static_cast<double>(inst.LNBackoffs(1)(0))).epsilon(static_cast<double>(0.001) / 100.0));
+  CHECK(static_cast<double>((-0.30103 - 0.30103) * M_LN10) == doctest::Approx(static_cast<double>(inst.LNBackoffs(1)(1))).epsilon(static_cast<double>(0.001) / 100.0));
 
   util::stream::Chain extensions(util::stream::ChainConfig(inst.ReadExtensionsEntrySize(), 2, 300));
   inst.ReadExtensions(extensions);
@@ -99,37 +101,37 @@ TEST_CASE("Toy") {
   CHECK_EQ(0, stream->instance);
   CHECK_EQ(2 /* a */, stream->word);
   CHECK_EQ(0, stream->model);
-  CHECK_CLOSE(-0.37712017 * M_LN10, stream->ln_prob, 0.001);
+  CHECK(static_cast<double>(-0.37712017 * M_LN10) == doctest::Approx(static_cast<double>(stream->ln_prob)).epsilon(static_cast<double>(0.001) / 100.0));
 
   // <s> a from model 1
   REQUIRE(++stream);
   CHECK_EQ(0, stream->instance);
   CHECK_EQ(2 /* a */, stream->word);
   CHECK_EQ(1, stream->model);
-  CHECK_CLOSE(-0.4301247 * M_LN10, stream->ln_prob, 0.001);
+  CHECK(static_cast<double>(-0.4301247 * M_LN10) == doctest::Approx(static_cast<double>(stream->ln_prob)).epsilon(static_cast<double>(0.001) / 100.0));
 
   // <s> c from model 1
   REQUIRE(++stream);
   CHECK_EQ(0, stream->instance);
   CHECK_EQ(4 /* c */, stream->word);
   CHECK_EQ(1, stream->model);
-  CHECK_CLOSE(-0.4740302 * M_LN10, stream->ln_prob, 0.001);
+  CHECK(static_cast<double>(-0.4740302 * M_LN10) == doctest::Approx(static_cast<double>(stream->ln_prob)).epsilon(static_cast<double>(0.001) / 100.0));
 
   // <s> b from model 0
   REQUIRE(++stream);
   CHECK_EQ(0, stream->instance);
   CHECK_EQ(5 /* b */, stream->word);
   CHECK_EQ(0, stream->model);
-  CHECK_CLOSE(-0.41574955 * M_LN10, stream->ln_prob, 0.001);
+  CHECK(static_cast<double>(-0.41574955 * M_LN10) == doctest::Approx(static_cast<double>(stream->ln_prob)).epsilon(static_cast<double>(0.001) / 100.0));
 
   // c </s> from model 1
   REQUIRE(++stream);
   CHECK_EQ(1, stream->instance);
   CHECK_EQ(3 /* </s> */, stream->word);
   CHECK_EQ(1, stream->model);
-  CHECK_CLOSE(-0.09113217 * M_LN10, stream->ln_prob, 0.001);
+  CHECK(static_cast<double>(-0.09113217 * M_LN10) == doctest::Approx(static_cast<double>(stream->ln_prob)).epsilon(static_cast<double>(0.001) / 100.0));
 
-  CHECK(!++stream);
+  CHECK_FALSE(++stream);
 }
 
 }}} // namespaces

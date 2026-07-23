@@ -6,11 +6,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
-#if defined(_WIN32) || defined(_WIN64)
-#include <io.h>
-#else
 #include <unistd.h>
-#endif
 
 namespace util { namespace stream { namespace {
 

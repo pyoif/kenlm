@@ -3,12 +3,11 @@
 #include <cstdlib>
 #include <cstring>
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-
+#include "../util/test_main.hh"
 
 // Apparently some Boost versions use templates and are pretty strict about types matching.
-#define SLOPPY_CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(ref) == doctest::Approx(static_cast<double>(value)).epsilon(static_cast<double>(tol) / 100.0));
+#define SLOPPY_CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(static_cast<double>(ref)) == doctest::Approx(static_cast<double>(static_cast<double>(value))).epsilon(static_cast<double>(static_cast<double>(tol)) / 100.0));
 
 namespace lm {
 namespace ngram {
@@ -24,13 +23,25 @@ std::ostream &operator<<(std::ostream &o, const State &state) {
 namespace {
 
 // Stupid bjam reverses the command line arguments randomly.
-const char *TestLocation() { return "test.arpa"; }
-const char *TestNoUnkLocation() { return "test_nounk.arpa"; }
+const char *TestLocation() {
+  if (test_argc < 3) {
+    return "test.arpa";
+  }
+  char **argv = test_argv;
+  return argv[strstr(argv[1], "nounk") ? 2 : 1];
+}
+const char *TestNoUnkLocation() {
+  if (test_argc < 3) {
+    return "test_nounk.arpa";
+  }
+  char **argv = test_argv;
+  return argv[strstr(argv[1], "nounk") ? 1 : 2];
+}
 
 template <class Model> State GetState(const Model &model, const char *word, const State &in) {
   std::vector<WordIndex> context(in.length + 1);
   context[0] = model.GetVocabulary().Index(word);
-  std::copy(in.words, in.words + in.length, context.data() + 1);
+  std::copy(in.words, in.words + in.length, context + 1);
   State ret;
   model.GetState(context.data(), context.data() + in.length + 1, ret);
   return ret;
@@ -189,7 +200,7 @@ template <class M> void ExtendLeftTest(const M &model) {
   SLOPPY_CHECK_CLOSE(-0.69897, backoff_out[0], 0.001);
   SLOPPY_CHECK_CLOSE(-0.09132547 - little.rest, extend_a.prob, 0.001);
   CHECK_EQ(2, extend_a.ngram_length);
-  CHECK(!extend_a.independent_left);
+  CHECK_FALSE(extend_a.independent_left);
 
   const WordIndex on = model.GetVocabulary().Index("on");
   FullScoreReturn extend_on(model.ExtendLeft(&on, &on + 1, &backoff_in, extend_a.extend_left, 2, backoff_out, next_use));
@@ -197,7 +208,7 @@ template <class M> void ExtendLeftTest(const M &model) {
   SLOPPY_CHECK_CLOSE(-0.4771212, backoff_out[0], 0.001);
   SLOPPY_CHECK_CLOSE(-0.0283603 - (extend_a.rest + little.rest), extend_on.prob, 0.001);
   CHECK_EQ(3, extend_on.ngram_length);
-  CHECK(!extend_on.independent_left);
+  CHECK_FALSE(extend_on.independent_left);
 
   const WordIndex both[2] = {a, on};
   float backoff_in_arr[4];
@@ -207,7 +218,7 @@ template <class M> void ExtendLeftTest(const M &model) {
   SLOPPY_CHECK_CLOSE(-0.4771212, backoff_out[1], 0.001);
   SLOPPY_CHECK_CLOSE(-0.0283603 - little.rest, extend_both.prob, 0.001);
   CHECK_EQ(3, extend_both.ngram_length);
-  CHECK(!extend_both.independent_left);
+  CHECK_FALSE(extend_both.independent_left);
   CHECK_EQ(extend_on.extend_left, extend_both.extend_left);
 }
 

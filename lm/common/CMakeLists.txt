@@ -19,6 +19,7 @@ set(KENLM_LM_COMMON_SOURCE
 
 if(BUILD_TESTING)
   KenLMAddTest(TEST model_buffer_test
+               NEEDS_ARGS
                LIBRARIES kenlm
                TEST_ARGS ${CMAKE_CURRENT_SOURCE_DIR}/test_data)
 endif()

@@ -31,13 +31,15 @@ endfunction()
 # object files, linking against the specified libraries, and with the
 # specified command line arguments
 function(KenLMAddTest)
-  cmake_parse_arguments(KenLMAddTest "" "TEST"
+  cmake_parse_arguments(KenLMAddTest "NEEDS_ARGS" "TEST"
                         "DEPENDS;LIBRARIES;TEST_ARGS" ${ARGN})
 
   # Compile the executable, linking against the requisite dependent object files
-  add_executable(${KenLMAddTest_TEST}
-                 ${KenLMAddTest_TEST}.cc
-                 ${KenLMAddTest_DEPENDS})
+  set(TEST_SOURCES ${KenLMAddTest_TEST}.cc ${KenLMAddTest_DEPENDS})
+  if(KenLMAddTest_NEEDS_ARGS)
+    list(APPEND TEST_SOURCES ${CMAKE_SOURCE_DIR}/util/test_main.cc)
+  endif()
+  add_executable(${KenLMAddTest_TEST} ${TEST_SOURCES})
 
   # Require the following compile flag
   set_target_properties(${KenLMAddTest_TEST} PROPERTIES
@@ -62,13 +64,22 @@ endfunction()
 # dependent object files and linking against the specified libraries
 function(AddTests)
   set(multiValueArgs TESTS DEPENDS LIBRARIES TEST_ARGS)
-  cmake_parse_arguments(AddTests "" "" "${multiValueArgs}" ${ARGN})
+  set(optionArgs NEEDS_ARGS)
+  cmake_parse_arguments(AddTests "${optionArgs}" "" "${multiValueArgs}" ${ARGN})
 
   # Iterate through the tests list
   foreach(test ${AddTests_TESTS})
-    KenLMAddTest(TEST ${test}
-                 DEPENDS ${AddTests_DEPENDS}
-                 LIBRARIES ${AddTests_LIBRARIES}
-                 TEST_ARGS ${AddTests_TEST_ARGS})
+    if(AddTests_NEEDS_ARGS)
+      KenLMAddTest(TEST ${test}
+                   NEEDS_ARGS
+                   DEPENDS ${AddTests_DEPENDS}
+                   LIBRARIES ${AddTests_LIBRARIES}
+                   TEST_ARGS ${AddTests_TEST_ARGS})
+    else()
+      KenLMAddTest(TEST ${test}
+                   DEPENDS ${AddTests_DEPENDS}
+                   LIBRARIES ${AddTests_LIBRARIES}
+                   TEST_ARGS ${AddTests_TEST_ARGS})
+    endif()
   endforeach(test)
 endfunction()

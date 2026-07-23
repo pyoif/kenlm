@@ -1,39 +1,24 @@
+#define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
 #include "integer_to_string.hh"
 #include "string_piece.hh"
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-#include <string>
 
-#include <cstdio>
 #include <limits>
-#include <sstream>
 
 namespace util {
 namespace {
-
-template <class T> std::string Stringify(const T &value) {
-  return std::to_string(value);
-}
-
-std::string Stringify(const void *value) {
-  std::ostringstream ss;
-  ss << value;
-  return ss.str();
-}
 
 template <class T> void TestValue(const T value) {
   char buf[ToStringBuf<T>::kBytes];
   StringPiece result(buf, ToString(value, buf) - buf);
   REQUIRE_GE(static_cast<std::size_t>(ToStringBuf<T>::kBytes), result.size());
   if (value) {
-    std::string ref = Stringify(value);
-    std::string got(result.data(), result.size());
-    if (ref != got) FAIL_CHECK("ToString mismatch: expected " << ref << " got " << got);
+    CHECK_EQ(std::to_string(value), result);
   } else {
     // Platforms can do void * as 0x0 or 0.
-    bool is_zero = (result == "0x0") || (result == "0");
-    CHECK(is_zero);
+    CHECK(result == "0x0" || result == "0");
   }
 }
 

@@ -35,18 +35,18 @@ void CheckOutput(const util::stream::ChainPosition &from) {
   }
   sum = log10(sum);
   REQUIRE(in);
-  CHECK_CLOSE(kInputs[0] - sum, in->Value(), 0.0001);
+  CHECK(static_cast<double>(kInputs[0] - sum) == doctest::Approx(static_cast<double>(in->Value())).epsilon(static_cast<double>(0.0001) / 100.0));
   REQUIRE(++in);
-  CHECK_CLOSE(kInputs[1] - sum, in->Value(), 0.0001);
+  CHECK(static_cast<double>(kInputs[1] - sum) == doctest::Approx(static_cast<double>(in->Value())).epsilon(static_cast<double>(0.0001) / 100.0));
   REQUIRE(++in);
-  CHECK_CLOSE(kInputs[2] - sum, in->Value(), 0.0001);
+  CHECK(static_cast<double>(kInputs[2] - sum) == doctest::Approx(static_cast<double>(in->Value())).epsilon(static_cast<double>(0.0001) / 100.0));
   REQUIRE(++in);
-  CHECK_CLOSE(kInputs[3] - sum, in->Value(), 0.0001);
+  CHECK(static_cast<double>(kInputs[3] - sum) == doctest::Approx(static_cast<double>(in->Value())).epsilon(static_cast<double>(0.0001) / 100.0));
   REQUIRE(++in);
-  CHECK_CLOSE(kInputs[4] - sum, in->Value(), 0.0001);
+  CHECK(static_cast<double>(kInputs[4] - sum) == doctest::Approx(static_cast<double>(in->Value())).epsilon(static_cast<double>(0.0001) / 100.0));
   REQUIRE(++in);
-  CHECK_CLOSE(kInputs[5] - sum, in->Value(), 0.0001);
-  CHECK(!++in);
+  CHECK(static_cast<double>(kInputs[5] - sum) == doctest::Approx(static_cast<double>(in->Value())).epsilon(static_cast<double>(0.0001) / 100.0));
+  CHECK_FALSE(++in);
 }
 
 TEST_CASE("Unigrams") {

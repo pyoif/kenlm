@@ -49,7 +49,7 @@ class CheckAnswers {
       Check("<s> <s> bar", 1);
       Check("<s> bar </s>", 1);
       Check("<s> <s> </s>", 1);
-      CHECK(!stream);
+      CHECK_FALSE(stream);
     }
 };
 

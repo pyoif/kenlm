@@ -2,15 +2,16 @@
 #include "../model.hh"
 #include "../state.hh"
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-
-#define CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(ref) == doctest::Approx(static_cast<double>(value)).epsilon(static_cast<double>(tol) / 100.0))
+#include "../../util/test_main.hh"
 
 namespace lm { namespace {
 
 TEST_CASE("Query") {
   std::string dir("test_data");
+  if (test_argc == 2) {
+    dir = test_argv[1];
+  }
   ngram::Model ref((dir + "/toy0.arpa").c_str());
 #if BYTE_ORDER == LITTLE_ENDIAN
   std::string endian = "little";
@@ -23,8 +24,7 @@ TEST_CASE("Query") {
   ModelBuffer test(dir + "/" + endian + "endian/toy0");
   ngram::State ref_state, test_state;
   WordIndex a = ref.GetVocabulary().Index("a");
-  CHECK_CLOSE(
-      ref.FullScore(ref.BeginSentenceState(), a, ref_state).prob,
+  CHECK(static_cast<double>(ref.FullScore(ref.BeginSentenceState()) == doctest::Approx(static_cast<double>(a)).epsilon(static_cast<double>(ref_state) / 100.0)).prob,
       test.SlowQuery(ref.BeginSentenceState(), a, test_state),
       0.001);
   CHECK_EQ((unsigned)ref_state.length, (unsigned)test_state.length);
@@ -34,15 +34,13 @@ TEST_CASE("Query") {
 
   ngram::State ref_state2, test_state2;
   WordIndex b = ref.GetVocabulary().Index("b");
-  CHECK_CLOSE(
-      ref.FullScore(ref_state, b, ref_state2).prob,
+  CHECK(static_cast<double>(ref.FullScore(ref_state) == doctest::Approx(static_cast<double>(b)).epsilon(static_cast<double>(ref_state2) / 100.0)).prob,
       test.SlowQuery(test_state, b, test_state2),
       0.001);
   CHECK(ref_state2 == test_state2);
   CHECK_EQ(ref_state2.backoff[0], test_state2.backoff[0]);
 
-  CHECK_CLOSE(
-      ref.FullScore(ref_state2, 0, ref_state).prob,
+  CHECK(static_cast<double>(ref.FullScore(ref_state2) == doctest::Approx(static_cast<double>(0)).epsilon(static_cast<double>(ref_state) / 100.0)).prob,
       test.SlowQuery(test_state2, 0, test_state),
       0.001);
   // The reference does state minimization but this doesn't.

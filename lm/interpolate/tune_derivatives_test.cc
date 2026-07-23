@@ -114,12 +114,12 @@ TEST_CASE("Small") {
   expected_gradient(0) += p_I(0) * log(0.1 * 0.2);
   expected_gradient(0) += p_I(1) * log(0.4 * 0.2);
   expected_gradient(0) += p_I(2) * log(model_0_word_2);
-  CHECK_CLOSE(expected_gradient(0), gradient(0), 0.01);
+  CHECK(static_cast<double>(expected_gradient(0)) == doctest::Approx(static_cast<double>(gradient(0))).epsilon(static_cast<double>(0.01) / 100.0));
 
   expected_gradient(1) += p_I(0) * log(0.6 * 0.4);
   expected_gradient(1) += p_I(1) * log(model_1_word_1);
   expected_gradient(1) += p_I(2) * log(0.1 * 0.4);
-  CHECK_CLOSE(expected_gradient(1), gradient(1), 0.01);
+  CHECK(static_cast<double>(expected_gradient(1)) == doctest::Approx(static_cast<double>(gradient(1))).epsilon(static_cast<double>(0.01) / 100.0));
 
   Matrix expected_hessian(2, 2);
   expected_hessian(1, 0) =
@@ -131,8 +131,8 @@ TEST_CASE("Small") {
     (p_I(0) * log(0.1 * 0.2) + p_I(1) * log(0.4 * 0.2) + p_I(2) * log(model_0_word_2)) *
     (p_I(0) * log(0.6 * 0.4) + p_I(1) * log(model_1_word_1) + p_I(2) * log(0.1 * 0.4));
   expected_hessian(0, 1) = expected_hessian(1, 0);
-  CHECK_CLOSE(expected_hessian(1, 0), hessian(1, 0), 0.01);
-  CHECK_CLOSE(expected_hessian(0, 1), hessian(0, 1), 0.01);
+  CHECK(static_cast<double>(expected_hessian(1) == doctest::Approx(static_cast<double>(0), hessian(1)).epsilon(static_cast<double>(0) / 100.0)), 0.01);
+  CHECK(static_cast<double>(expected_hessian(0) == doctest::Approx(static_cast<double>(1), hessian(0)).epsilon(static_cast<double>(1) / 100.0)), 0.01);
 }
 
 }}} // namespaces

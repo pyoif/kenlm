@@ -11,16 +11,18 @@
 #include <string>
 #include <cstdlib>
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined __MINGW32__
 #include <ctime>
 #include <fcntl.h>
-#include <io.h>
 
-#if !defined(mkstemp)
-inline int mkstemp(char * stemplate) {
-    char *filename = _mktemp(stemplate);
-    if (filename == NULL) return -1;
-    return _open(filename, _O_RDWR | _O_CREAT, 0600);
+#if !defined mkstemp
+// TODO insecure
+int mkstemp(char * stemplate)
+{
+    char *filename = mktemp(stemplate);
+    if (filename == NULL)
+        return -1;
+    return open(filename, O_RDWR | O_CREAT, 0600);
 }
 #endif
 
@@ -43,7 +45,7 @@ const uint32_t kSize4 = 100000 / 4;
 
 std::string WriteRandom() {
   char name[] = "tempXXXXXX";
-  util::scoped_fd original(mkstemp(name));
+  scoped_fd original(mkstemp(name));
   REQUIRE(original.get() > 0);
   for (uint32_t i = 0; i < kSize4; ++i) {
     WriteOrThrow(original.get(), &i, sizeof(uint32_t));
@@ -68,7 +70,7 @@ void TestRandom(const char *compressor) {
   std::string name(WriteRandom());
 
   char gzname[] = "tempXXXXXX";
-  util::scoped_fd gzipped(mkstemp(gzname));
+  scoped_fd gzipped(mkstemp(gzname));
 
   std::string command(compressor);
 #ifdef __CYGWIN__

@@ -54,6 +54,7 @@ if(ENABLE_INTERPOLATE)
 
     # tune_instances_test needs an extra command line parameter
     KenLMAddTest(TEST tune_instances_test
+      NEEDS_ARGS
       LIBRARIES ${KENLM_INTERPOLATE_LIBS}
       TEST_ARGS -- ${CMAKE_CURRENT_SOURCE_DIR}/../common/test_data)
   endif()

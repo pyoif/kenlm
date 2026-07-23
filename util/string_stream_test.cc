@@ -1,29 +1,18 @@
+#define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include "string_stream.hh"
 #include <doctest/doctest.h>
+
 #include <cstddef>
 #include <limits>
-#include <sstream>
 
 namespace util { namespace {
-
-template <class T> std::string Stringify(const T &value) {
-  std::ostringstream ss;
-  ss << value;
-  return ss.str();
-}
-
-std::string Stringify(const void *value) {
-  std::ostringstream ss;
-  ss << value;
-  return ss.str();
-}
 
 template <class T> void TestEqual(const T value) {
   StringStream strme;
   strme << value;
-  { auto expected = Stringify(value); CHECK_EQ(expected, strme.str()); }
+  CHECK_EQ(std::to_string(value), strme.str());
 }
 
 template <class T> void TestCorners() {

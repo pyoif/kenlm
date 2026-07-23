@@ -121,7 +121,8 @@ if(BUILD_TESTING)
            LIBRARIES kenlm_util Threads::Threads)
 
   # file_piece_test requires an extra command line parameter
-  KenLMAddTest(TEST file_piece_test
+KenLMAddTest(TEST file_piece_test
+               NEEDS_ARGS
                LIBRARIES kenlm_util Threads::Threads
                TEST_ARGS ${CMAKE_CURRENT_SOURCE_DIR}/file_piece.cc)
 endif()

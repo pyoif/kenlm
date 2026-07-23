@@ -69,11 +69,13 @@ if(BUILD_TESTING)
 
   set(KENLM_TESTS_LIST left_test partial_test)
   AddTests(TESTS ${KENLM_TESTS_LIST}
+           NEEDS_ARGS
            LIBRARIES ${LM_LIBS}
            TEST_ARGS ${CMAKE_CURRENT_SOURCE_DIR}/test.arpa)
 
   # model_test requires an extra command line parameter
   KenLMAddTest(TEST model_test
+               NEEDS_ARGS
                LIBRARIES ${LM_LIBS}
                TEST_ARGS ${CMAKE_CURRENT_SOURCE_DIR}/test.arpa
                          ${CMAKE_CURRENT_SOURCE_DIR}/test_nounk.arpa)
