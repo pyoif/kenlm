@@ -22,6 +22,9 @@ struct Range {
   typename std::iterator_traits<I>::reference back() const { return *(end_ - 1); }
 
   void advance_begin(std::size_t n) { begin_ += n; }
+
+  bool operator==(const Range &other) const { return begin_ == other.begin_ && end_ == other.end_; }
+  bool operator!=(const Range &other) const { return !(*this == other); }
 };
 
 } // namespace util

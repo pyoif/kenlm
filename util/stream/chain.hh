@@ -198,7 +198,7 @@ class Chain {
    */
     template <class Worker> typename CheckForRun<Worker>::type &operator>>(const std::reference_wrapper<Worker> &worker) {
       assert(!complete_called_);
-      threads_.push_back(std::unique_ptr<Thread>(new Thread(Add(), worker)));
+      threads_.push_back(std::unique_ptr<Thread>(new Thread(Add(), worker.get())));
       return *this;
     }
 

@@ -1,4 +1,3 @@
-#define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
 #include "integer_to_string.hh"
 #include "string_piece.hh"
 
@@ -6,18 +5,29 @@
 #include <doctest/doctest.h>
 #include <string>
 
+#include <cstdio>
 #include <limits>
+#include <sstream>
 
 namespace util {
 namespace {
 
+template <class T> std::string Stringify(const T &value) {
+  return std::to_string(value);
+}
+
+std::string Stringify(const void *value) {
+  std::ostringstream ss;
+  ss << value;
+  return ss.str();
+}
+
 template <class T> void TestValue(const T value) {
   char buf[ToStringBuf<T>::kBytes];
   StringPiece result(buf, ToString(value, buf) - buf);
-  BOOST_REQUIRE_GE(static_cast<std::size_t>(ToStringBuf<T>::kBytes), result.size());
+  REQUIRE_GE(static_cast<std::size_t>(ToStringBuf<T>::kBytes), result.size());
   if (value) {
-    CHECK_EQ(std::to_string(value), result);
-  } else {
+    CHECK_EQ(Stringify(value), result);
     // Platforms can do void * as 0x0 or 0.
     CHECK(result == "0x0" || result == "0");
   }

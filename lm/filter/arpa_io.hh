@@ -38,8 +38,6 @@ class ARPAOutput {
     explicit ARPAOutput(const char *name, size_t buffer_size = 65536);
     ARPAOutput(const ARPAOutput&) = delete;
     ARPAOutput& operator=(const ARPAOutput&) = delete;
-  public:
-    explicit ARPAOutput(const char *name, size_t buffer_size = 65536);
 
     void ReserveForCounts(std::streampos reserve);
 

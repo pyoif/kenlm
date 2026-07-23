@@ -94,6 +94,8 @@ target_include_directories(kenlm_cli11 INTERFACE ${CMAKE_SOURCE_DIR}/third_party
 add_library(kenlm_doctest INTERFACE)
 target_include_directories(kenlm_doctest INTERFACE ${CMAKE_SOURCE_DIR}/third_party/doctest/include)
 
+include_directories(${CMAKE_SOURCE_DIR}/third_party/CLI11/include ${CMAKE_SOURCE_DIR}/third_party/doctest/include)
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
