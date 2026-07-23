@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.28)
 
-# CMake 3.28 is latest on all major GitHub Actions runners (ubuntu-24.04, windows-2025, macos-15).
-# Boost/Eigen use Config mode via find_package.
+# CMake >= 4.0 removed the FindBoost module. CMP0167=OLD restores it.
+# On CI runners (≤3.31) this is a no-op; on 4.x dev machines it keeps builds working.
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
 
 if (WIN32)
     set(Boost_USE_STATIC_LIBS OFF)
