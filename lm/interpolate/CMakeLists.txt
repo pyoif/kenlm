@@ -1,7 +1,7 @@
 # Eigen3 less than 3.1.0 has a race condition: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=466
 
 if(ENABLE_INTERPOLATE)
-  find_package(Eigen3 3.3 CONFIG REQUIRED)
+  find_package(Eigen3 5.0 CONFIG REQUIRED)
   include_directories(${EIGEN3_INCLUDE_DIR})
 
   set(KENLM_INTERPOLATE_SOURCE
