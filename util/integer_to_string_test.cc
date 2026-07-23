@@ -3,7 +3,6 @@
 #include "string_piece.hh"
 
 #define BOOST_TEST_MODULE IntegerToStringTest
-#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
 

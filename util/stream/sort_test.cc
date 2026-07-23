@@ -1,7 +1,6 @@
 #include "sort.hh"
 
 #define BOOST_TEST_MODULE SortTest
-#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>

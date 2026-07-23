@@ -4,7 +4,6 @@
 #include "../file.hh"
 
 #define BOOST_TEST_MODULE RewindableStreamTest
-#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace util {

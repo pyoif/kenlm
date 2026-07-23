@@ -4,7 +4,6 @@
 #include "scoped.hh"
 
 #define BOOST_TEST_MODULE ProbingHashTableTest
-#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/functional/hash.hpp>

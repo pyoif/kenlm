@@ -107,6 +107,7 @@ find_package(Boost 1.41.0 REQUIRED COMPONENTS
 
 # Define where include files live
 include_directories(${Boost_INCLUDE_DIRS})
+add_compile_definitions(BOOST_TEST_NO_DEPRECATED=1)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

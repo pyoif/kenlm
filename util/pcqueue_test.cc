@@ -1,7 +1,6 @@
 #include "pcqueue.hh"
 
 #define BOOST_TEST_MODULE PCQueueTest
-#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 
 namespace util {

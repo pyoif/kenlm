@@ -4,7 +4,6 @@
 #include <cstring>
 
 #define BOOST_TEST_MODULE ModelTest
-#define BOOST_TEST_NO_DEPRECATED
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
