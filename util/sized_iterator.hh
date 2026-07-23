@@ -154,7 +154,7 @@ template <unsigned Size> class JustPOD {
   unsigned char data[Size];
 };
 
-template <class Delegate, unsigned Size> class JustPODDelegate :  &, const JustPOD<Size> &, bool> {
+template <class Delegate, unsigned Size> class JustPODDelegate {
   public:
     explicit JustPODDelegate(const Delegate &compare) : delegate_(compare) {}
     bool operator()(const JustPOD<Size> &first, const JustPOD<Size> &second) const {
