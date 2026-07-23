@@ -45,7 +45,7 @@ const uint32_t kSize4 = 100000 / 4;
 
 std::string WriteRandom() {
   char name[] = "tempXXXXXX";
-  scoped_fd original(mkstemp(name));
+  util::scoped_fd original(mkstemp(name));
   REQUIRE(original.get() > 0);
   for (uint32_t i = 0; i < kSize4; ++i) {
     WriteOrThrow(original.get(), &i, sizeof(uint32_t));
@@ -70,7 +70,7 @@ void TestRandom(const char *compressor) {
   std::string name(WriteRandom());
 
   char gzname[] = "tempXXXXXX";
-  scoped_fd gzipped(mkstemp(gzname));
+  util::scoped_fd gzipped(mkstemp(gzname));
 
   std::string command(compressor);
 #ifdef __CYGWIN__

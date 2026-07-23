@@ -28,11 +28,11 @@ const char *TestLocation() { return "test.arpa"; }
 const char *TestNoUnkLocation() { return "test_nounk.arpa"; }
 
 template <class Model> State GetState(const Model &model, const char *word, const State &in) {
-  WordIndex context[in.length + 1];
+  std::vector<WordIndex> context(in.length + 1);
   context[0] = model.GetVocabulary().Index(word);
-  std::copy(in.words, in.words + in.length, context + 1);
+  std::copy(in.words, in.words + in.length, context.data() + 1);
   State ret;
-  model.GetState(context, context + in.length + 1, ret);
+  model.GetState(context.data(), context.data() + in.length + 1, ret);
   return ret;
 }
 
@@ -43,7 +43,7 @@ template <class Model> State GetState(const Model &model, const char *word, cons
       out);\
   SLOPPY_CHECK_CLOSE(score, ret.prob, 0.001); \
   CHECK_EQ(static_cast<unsigned int>(ngram), ret.ngram_length); \
-  BOOST_CHECK_GE(std::min<unsigned char>(ngram, 5 - 1), out.length); \
+  CHECK_GE(std::min<unsigned char>(ngram, 5 - 1), out.length); \
   CHECK_EQ(indep_left, ret.independent_left); \
   CHECK_EQ(out, GetState(model, word, state));
 

@@ -23,7 +23,6 @@ inline size_t hash_value(const StringPiece &str) {
 U_NAMESPACE_END
 #endif
 
-/* Support for lookup of StringPiece in boost::unordered_map<std::string> */
 struct StringPieceCompatibleHash {
   size_t operator()(const StringPiece &str) const {
     return hash_value(str);
@@ -35,12 +34,15 @@ struct StringPieceCompatibleEquals {
     return first == second;
   }
 };
+
+// std::unordered_map does not support custom hash/equals in find().
+// Use std::string conversion for lookup.
 template <class T> typename T::const_iterator FindStringPiece(const T &t, const StringPiece &key) {
-  return t.find(key, StringPieceCompatibleHash(), StringPieceCompatibleEquals());
+  return t.find(std::string(key.data(), key.size()));
 }
 
 template <class T> typename T::iterator FindStringPiece(T &t, const StringPiece &key) {
-  return t.find(key, StringPieceCompatibleHash(), StringPieceCompatibleEquals());
+  return t.find(std::string(key.data(), key.size()));
 }
 
 #endif // UTIL_STRING_PIECE_HASH_H

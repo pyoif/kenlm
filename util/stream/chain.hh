@@ -67,9 +67,16 @@ class Thread {
     template <class Position, class Worker> Thread(const Position &position, Worker worker)
       : thread_(&Thread::Run<Position, Worker>, this, position, worker) {}
 
+    // Pointer variant for non-copyable workers (std::ref/boost::ref use path)
+    template <class Position, class Worker> Thread(const Position &position, Worker *worker)
+      : thread_(&Thread::RunPtr<Position, Worker>, this, position, worker) {}
+
   private:
     template <class Position, class Worker> static void Run(Thread *self, Position position, Worker worker) {
       (*self)(position, worker);
+    }
+    template <class Position, class Worker> static void RunPtr(Thread *self, Position position, Worker *worker) {
+      (*self)(position, *worker);
     }
   public:
 
@@ -198,7 +205,7 @@ class Chain {
    */
     template <class Worker> typename CheckForRun<Worker>::type &operator>>(const std::reference_wrapper<Worker> &worker) {
       assert(!complete_called_);
-      threads_.push_back(std::unique_ptr<Thread>(new Thread(Add(), worker.get())));
+      threads_.push_back(std::unique_ptr<Thread>(new Thread(Add(), &worker.get())));
       return *this;
     }
 

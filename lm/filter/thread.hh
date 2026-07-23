@@ -106,8 +106,8 @@ template <class Filter, class OutputBuffer, class RealOutput> class Controller {
       : batch_size_(batch_size), queue_size_(queue),
         batches_(queue),
         to_read_(queue),
-        output_(queue, 1, std::ref(output), std::ref(to_read_)),
-        filter_(queue, workers, std::ref(filter), std::ref(output_.In())),
+        output_(queue, 1, OutputWorker<Batch, RealOutput>(output, to_read_), NULL),
+        filter_(queue, workers, FilterWorker<Batch, Filter>(filter, output_.In()), NULL),
         sequence_(0) {
       for (size_t i = 0; i < queue; ++i) {
         batches_[i].Reserve(batch_size);

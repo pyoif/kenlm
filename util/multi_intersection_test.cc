@@ -19,7 +19,7 @@ TEST_CASE("Single") {
   nums.push_back(4);
   nums.push_back(100);
   std::vector<util::Range<std::vector<unsigned int>::const_iterator> > sets;
-  sets.push_back(nums);
+  sets.push_back(util::Range<std::vector<unsigned int>::const_iterator>(nums.begin(), nums.end()));
 
   std::optional<unsigned int> ret(FirstIntersection(sets));
 

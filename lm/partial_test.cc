@@ -9,6 +9,9 @@
 
 #define CHECK_CLOSE(ref, value, tol) CHECK(static_cast<double>(ref) == doctest::Approx(static_cast<double>(value)).epsilon(static_cast<double>(tol) / 100.0))
 
+#include <cmath>
+#include <string>
+#include <vector>
 
 namespace lm {
 namespace ngram {
@@ -23,15 +26,15 @@ Config SilentConfig() {
   return config;
 }
 
-struct ModelFixture {
-  ModelFixture() : m(TestLocation(), SilentConfig()) {}
-
-  RestProbingModel m;
-};
-
-BOOST_FIXTURE_TEST_SUITE(suite, ModelFixture)
+// Shared model instance — doctest doesn't have fixtures like Boost.Test.
+// Each TEST_CASE creates its own model.
+static RestProbingModel &GetModel() {
+  static RestProbingModel m(TestLocation(), SilentConfig());
+  return m;
+}
 
 TEST_CASE("SimpleBefore") {
+  RestProbingModel &m = GetModel();
   Left left;
   left.full = false;
   left.length = 0;
@@ -66,6 +69,7 @@ TEST_CASE("SimpleBefore") {
 }
 
 TEST_CASE("AlsoWouldConsider") {
+  RestProbingModel &m = GetModel();
   WordIndex would = m.GetVocabulary().Index("would");
   WordIndex consider = m.GetVocabulary().Index("consider");
 
@@ -82,7 +86,6 @@ TEST_CASE("AlsoWouldConsider") {
   after.length = 1;
   after.pointers[0] = consider;
 
-  // adjustment for would consider
   CHECK_CLOSE(-1.687872 - -0.2922095 - 0.30103, RevealAfter(m, current.left, current.right, after, 0), 0.001);
 
   CHECK_EQ(2, current.left.length);
@@ -94,8 +97,6 @@ TEST_CASE("AlsoWouldConsider") {
   before.length = 1;
   before.words[0] = also;
   before.backoff[0] = -0.30103;
-  // r(would) = -0.2922095 [i would], r(would -> consider) = -1.988902 [b(would) + p(consider)]
-  // p(also -> would) = -2, p(also would -> consider) = -3
   CHECK_CLOSE(-2 + 0.2922095 -3 + 1.988902, RevealBefore(m, before, 0, false, current.left, current.right), 0.001);
   CHECK_EQ(0, current.left.length);
   CHECK(current.left.full);
@@ -105,6 +106,7 @@ TEST_CASE("AlsoWouldConsider") {
 }
 
 TEST_CASE("EndSentence") {
+  RestProbingModel &m = GetModel();
   WordIndex loin = m.GetVocabulary().Index("loin");
   WordIndex period = m.GetVocabulary().Index(".");
   WordIndex eos = m.GetVocabulary().EndSentence();
@@ -156,7 +158,6 @@ void CheckAdjustment(const RestProbingModel &model, float expect, const Right &b
   if (before_full) {
     got += RevealBefore(model, before, before.length, true, between.left, between.right);
   }
-  // Sometimes they're zero and CHECK_CLOSE fails for this.
   CHECK(fabs(expect - got) < 0.001);
 }
 
@@ -185,12 +186,12 @@ void FullDivide(const RestProbingModel &model, StringPiece str) {
 }
 
 TEST_CASE("Strings") {
+  RestProbingModel &m = GetModel();
   FullDivide(m, "also would consider");
   FullDivide(m, "looking on a little more loin . </s>");
   FullDivide(m, "in biarritz watching considering looking . on a little more loin also would consider higher to look good unknown the screening foo bar , unknown however unknown </s>");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
 } // namespace
 } // namespace ngram
 } // namespace lm

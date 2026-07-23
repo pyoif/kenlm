@@ -4,13 +4,26 @@
 #include <doctest/doctest.h>
 #include <cstddef>
 #include <limits>
+#include <sstream>
 
 namespace util { namespace {
+
+template <class T> std::string Stringify(const T &value) {
+  std::ostringstream ss;
+  ss << value;
+  return ss.str();
+}
+
+std::string Stringify(const void *value) {
+  std::ostringstream ss;
+  ss << value;
+  return ss.str();
+}
 
 template <class T> void TestEqual(const T value) {
   StringStream strme;
   strme << value;
-  CHECK_EQ(std::to_string(value), strme.str());
+  { auto expected = Stringify(value); CHECK_EQ(expected, strme.str()); }
 }
 
 template <class T> void TestCorners() {

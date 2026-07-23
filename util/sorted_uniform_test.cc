@@ -62,11 +62,11 @@ TEST_CASE("empty") {
   CHECK_FALSE(ret);
 }
 
-template <class Key> void RandomTest(Key upper, size_t entries, size_t queries) {
+template <class Key> void RandomTest(unsigned int upper, size_t entries, size_t queries) {
   typedef unsigned char Value;
   std::mt19937 rng;
-  std::uniform_int_distribution<Key> range_key(0, upper);
-  std::uniform_int_distribution<Value> range_value(0, 255);
+  std::uniform_int_distribution<unsigned int> range_key(0, upper);
+  std::uniform_int_distribution<int> range_value(0, 255);
   auto gen_key = [&]() { return range_key(rng); };
   auto gen_value = [&]() { return range_value(rng); };
 

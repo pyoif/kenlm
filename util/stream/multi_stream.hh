@@ -51,7 +51,7 @@ class Chains : public util::FixedArray<util::stream::Chain> {
     }
 
     template <class Worker> typename CheckForRun<Worker>::type &operator>>(const std::reference_wrapper<Worker> &worker) {
-      threads_.push_back(std::unique_ptr<util::stream::Thread>(new util::stream::Thread(ChainPositions(*this), worker)));
+      threads_.push_back(std::unique_ptr<util::stream::Thread>(new util::stream::Thread(ChainPositions(*this), &worker.get())));
       return *this;
     }
 

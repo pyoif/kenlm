@@ -6,6 +6,7 @@
 #include "../../util/string_piece_hash.hh"
 #include "../../util/tokenize_piece.hh"
 
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -60,7 +61,7 @@ class TargetWords {
         interns_.push_back(intern_.Add(*i));
       }
       for (std::vector<unsigned int>::const_iterator i(sentences.begin()); i != sentences.end(); ++i) {
-        std::unordered_set<const char *> &vocab = vocab_[*i];
+        std::set<const char *> &vocab = vocab_[*i];
         for (std::vector<const char *>::const_iterator j = interns_.begin(); j != interns_.end(); ++j) {
           vocab.insert(*j);
         }
@@ -69,8 +70,8 @@ class TargetWords {
 
     void Print() const {
       util::FileStream out(1);
-      for (std::vector<std::unordered_set<const char *> >::const_iterator i = vocab_.begin(); i != vocab_.end(); ++i) {
-        for (std::unordered_set<const char *>::const_iterator j = i->begin(); j != i->end(); ++j) {
+      for (std::vector<std::set<const char *> >::const_iterator i = vocab_.begin(); i != vocab_.end(); ++i) {
+        for (std::set<const char *>::const_iterator j = i->begin(); j != i->end(); ++j) {
           out << *j << ' ';
         }
         out << '\n';
@@ -80,7 +81,7 @@ class TargetWords {
   private:
     InternString intern_;
 
-    std::vector<std::unordered_set<const char *> > vocab_;
+    std::vector<std::set<const char *> > vocab_;
 
     // Temporary in Add.
     std::vector<const char *> interns_;

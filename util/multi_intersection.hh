@@ -3,6 +3,7 @@
 
 #include "range.hh"
 
+#include <cassert>
 #include <algorithm>
 #include <functional>
 #include <optional>
