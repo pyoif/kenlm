@@ -10,7 +10,7 @@
 #include "../../util/stream/io.hh"
 #include "../../util/stream/multi_stream.hh"
 
-#include <boost/lexical_cast.hpp>
+#include <string>
 
 #include <numeric>
 
@@ -54,7 +54,7 @@ ModelBuffer::ModelBuffer(StringPiece file_base)
 
   files_.Init(counts_.size());
   for (unsigned long i = 0; i < counts_.size(); ++i) {
-    files_.push_back(util::OpenReadOrThrow((file_base_ + '.' + boost::lexical_cast<std::string>(i + 1)).c_str()));
+    files_.push_back(util::OpenReadOrThrow((file_base_ + '.' + std::to_string(i + 1)).c_str()));
   }
 }
 
@@ -65,7 +65,7 @@ void ModelBuffer::Sink(util::stream::Chains &chains, const std::vector<uint64_t>
   for (std::size_t i = 0; i < chains.size(); ++i) {
     if (keep_buffer_) {
       files_.push_back(util::CreateOrThrow(
-            (file_base_ + '.' + boost::lexical_cast<std::string>(i + 1)).c_str()
+            (file_base_ + '.' + std::to_string(i + 1)).c_str()
             ));
     } else {
       files_.push_back(util::MakeTemp(file_base_));

@@ -3,7 +3,7 @@
 
 #include "../../util/thread_pool.hh"
 
-#include <boost/utility/in_place_factory.hpp>
+#include <functional>
 
 #include <deque>
 #include <stack>
@@ -97,7 +97,7 @@ template <class Batch, class Output> class OutputWorker {
     uint64_t base_sequence_;
 };
 
-template <class Filter, class OutputBuffer, class RealOutput> class Controller : boost::noncopyable {
+template <class Filter, class OutputBuffer, class RealOutput> class Controller {
   private:
     typedef ThreadBatch<OutputBuffer> Batch;
 
@@ -106,8 +106,8 @@ template <class Filter, class OutputBuffer, class RealOutput> class Controller :
       : batch_size_(batch_size), queue_size_(queue),
         batches_(queue),
         to_read_(queue),
-        output_(queue, 1, boost::in_place(boost::ref(output), boost::ref(to_read_)), NULL),
-        filter_(queue, workers, boost::in_place(boost::ref(filter), boost::ref(output_.In())), NULL),
+        output_(queue, 1, std::ref(output), std::ref(to_read_)),
+        filter_(queue, workers, std::ref(filter), std::ref(output_.In())),
         sequence_(0) {
       for (size_t i = 0; i < queue; ++i) {
         batches_[i].Reserve(batch_size);

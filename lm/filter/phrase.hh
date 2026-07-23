@@ -5,7 +5,7 @@
 #include "../../util/string_piece.hh"
 #include "../../util/tokenize_piece.hh"
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 #include <iosfwd>
 #include <vector>
@@ -42,7 +42,7 @@ class Substrings {
      * In that case, the filter will be slightly more permissive.
      * The key here is the same as boost's hash of std::vector<std::string>.
      */
-    typedef boost::unordered_map<Hash, SentenceRelation> Table;
+    typedef std::unordered_map<Hash, SentenceRelation> Table;
 
   public:
     Substrings() {}

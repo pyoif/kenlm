@@ -3,7 +3,7 @@
 #include "../../util/file.hh"
 #include "../../util/read_compressed.hh"
 
-#include <boost/lexical_cast.hpp>
+#include <string>
 
 #include <iostream>
 #include <vector>
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
   util::ReadCompressed counts(util::OpenReadOrThrow(argv[1]));
   util::scoped_fd vocab_file(util::OpenReadOrThrow(argv[2]));
   lm::VocabReconstitute vocab(vocab_file.get());
-  unsigned int order = boost::lexical_cast<unsigned int>(argv[3]);
+  unsigned int order = static_cast<unsigned int>(std::stoul(argv[3]));
   std::vector<char> record(sizeof(uint32_t) * order + sizeof(uint64_t));
   while (std::size_t got = counts.ReadOrEOF(&*record.begin(), record.size())) {
     UTIL_THROW_IF(got != record.size(), util::Exception, "Read " << got << " bytes at the end of file, which is not a complete record of length " << record.size());

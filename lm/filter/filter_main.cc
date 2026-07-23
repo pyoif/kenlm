@@ -9,11 +9,12 @@
 #include "../../util/exception.hh"
 #include "../../util/file_piece.hh"
 
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <memory>
 
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <memory>
 
 namespace lm {
@@ -40,7 +41,7 @@ void DisplayHelp(const char *name) {
     "    text.  This is useful for ngram count files.\n"
     "arpa means the ARPA file format for n-gram language models.\n\n"
 #ifndef NTHREAD
-    "threads:m sets m threads (default: conccurrency detected by boost)\n"
+    "threads:m sets m threads (default: conccurrency detected by the system)\n"
     "batch_size:m sets the batch size for threading.  Expect memory usage from this\n"
     "    of 2*threads*batch_size n-grams.\n\n"
 #else
@@ -61,7 +62,7 @@ struct Config {
   Config() :
 #ifndef NTHREAD
   batch_size(25000),
-  threads(boost::thread::hardware_concurrency()),
+  threads(std::thread::hardware_concurrency()),
 #endif
   phrase(false),
   context(false),
@@ -119,7 +120,7 @@ template <class Format> void DispatchFilterModes(const Config &config, std::istr
       RunContextFilter<Format, Filter, MultipleOutputBuffer, typename Format::Multiple>(config, in_lm, Filter(substrings), out);
     } else {
       typedef vocab::Multiple Filter;
-      boost::unordered_map<std::string, std::vector<unsigned int> > words;
+      std::unordered_map<std::string, std::vector<unsigned int> > words;
       typename Format::Multiple out(out_name, vocab::ReadMultiple(in_vocab, words));
       RunContextFilter<Format, Filter, MultipleOutputBuffer, typename Format::Multiple>(config, in_lm, Filter(words), out);
     }
@@ -164,7 +165,7 @@ int main(int argc, char *argv[]) {
       return 1;
     }
 
-    // I used to have boost::program_options, but some users didn't want to compile boost.
+    // I used to have program_options, but some users didn't want to compile boost.
     lm::Config config;
     config.mode = lm::MODE_UNSET;
     for (int i = 1; i < argc - 2; ++i) {
@@ -187,13 +188,13 @@ int main(int argc, char *argv[]) {
         config.format = lm::FORMAT_COUNT;
 #ifndef NTHREAD
       } else if (!std::strncmp(str, "threads:", 8)) {
-        config.threads = boost::lexical_cast<size_t>(str + 8);
+        config.threads = static_cast<size_t>(std::stoul(str + 8));
         if (!config.threads) {
           std::cerr << "Specify at least one thread." << std::endl;
           return 1;
         }
       } else if (!std::strncmp(str, "batch_size:", 11)) {
-        config.batch_size = boost::lexical_cast<size_t>(str + 11);
+        config.batch_size = static_cast<size_t>(std::stoul(str + 11));
         if (config.batch_size < 5000) {
           std::cerr << "Batch size must be at least one and should probably be >= 5000" << std::endl;
           if (!config.batch_size) return 1;

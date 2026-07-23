@@ -7,7 +7,7 @@
 #include "../../util/stream/config.hh"
 #include "../../util/string_piece.hh"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <vector>
 

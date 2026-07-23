@@ -4,8 +4,10 @@
 #include "arpa_io.hh"
 #include "count_io.hh"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include <iosfwd>
 
@@ -13,7 +15,7 @@ namespace lm {
 
 template <class Single> class MultipleOutput {
   private:
-    typedef boost::ptr_vector<Single> Singles;
+    typedef std::vector<std::unique_ptr<Single>> Singles;
     typedef typename Singles::iterator SinglesIterator;
 
   public:
@@ -22,27 +24,27 @@ template <class Single> class MultipleOutput {
       std::string tmp;
       for (unsigned int i = 0; i < number; ++i) {
         tmp = prefix;
-        tmp += boost::lexical_cast<std::string>(i);
-        files_.push_back(new Single(tmp.c_str()));
+        tmp += std::to_string(i);
+        files_.push_back(std::unique_ptr<Single>(new Single(tmp.c_str())));
       }
     }
 
     void AddNGram(const StringPiece &line) {
-      for (SinglesIterator i = files_.begin(); i != files_.end(); ++i)
-        i->AddNGram(line);
+      for (auto i = files_.begin(); i != files_.end(); ++i)
+        (*i)->AddNGram(line);
     }
 
     template <class Iterator> void AddNGram(const Iterator &begin, const Iterator &end, const StringPiece &line) {
-      for (SinglesIterator i = files_.begin(); i != files_.end(); ++i)
-        i->AddNGram(begin, end, line);
+      for (auto i = files_.begin(); i != files_.end(); ++i)
+        (*i)->AddNGram(begin, end, line);
     }
 
     void SingleAddNGram(size_t offset, const StringPiece &line) {
-      files_[offset].AddNGram(line);
+      files_[offset]->AddNGram(line);
     }
 
     template <class Iterator> void SingleAddNGram(size_t offset, const Iterator &begin, const Iterator &end, const StringPiece &line) {
-      files_[offset].AddNGram(begin, end, line);
+      files_[offset]->AddNGram(begin, end, line);
     }
 
   protected:
@@ -54,23 +56,23 @@ class MultipleARPAOutput : public MultipleOutput<ARPAOutput> {
     MultipleARPAOutput(const char *prefix, size_t number) : MultipleOutput<ARPAOutput>(prefix, number) {}
 
     void ReserveForCounts(std::streampos reserve) {
-      for (boost::ptr_vector<ARPAOutput>::iterator i = files_.begin(); i != files_.end(); ++i)
-        i->ReserveForCounts(reserve);
+      for (auto i = files_.begin(); i != files_.end(); ++i)
+        (*i)->ReserveForCounts(reserve);
     }
 
     void BeginLength(unsigned int length) {
-      for (boost::ptr_vector<ARPAOutput>::iterator i = files_.begin(); i != files_.end(); ++i)
-        i->BeginLength(length);
+      for (auto i = files_.begin(); i != files_.end(); ++i)
+        (*i)->BeginLength(length);
     }
 
     void EndLength(unsigned int length) {
-      for (boost::ptr_vector<ARPAOutput>::iterator i = files_.begin(); i != files_.end(); ++i)
-        i->EndLength(length);
+      for (auto i = files_.begin(); i != files_.end(); ++i)
+        (*i)->EndLength(length);
     }
 
     void Finish() {
-      for (boost::ptr_vector<ARPAOutput>::iterator i = files_.begin(); i != files_.end(); ++i)
-        i->Finish();
+      for (auto i = files_.begin(); i != files_.end(); ++i)
+        (*i)->Finish();
     }
 };
 

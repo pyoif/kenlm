@@ -3,74 +3,50 @@
 
 #include "exception.hh"
 
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
-#include <boost/scoped_array.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/utility.hpp>
+#include <condition_variable>
+#include <memory>
+#include <mutex>
 
 #include <cerrno>
 
-#ifdef __APPLE__
-#include <mach/semaphore.h>
-#include <mach/task.h>
-#include <mach/mach_traps.h>
-#include <mach/mach.h>
-#endif // __APPLE__
-
 namespace util {
 
-/* OS X Maverick and Boost interprocess were doing "Function not implemented."
- * So this is my own wrapper around the mach kernel APIs.
- */
-#ifdef __APPLE__
-
-#define MACH_CALL(call) UTIL_THROW_IF(KERN_SUCCESS != (call), Exception, "Mach call failure")
-
+// C++11 condition_variable based semaphore (portable, no boost or Mach deps)
 class Semaphore {
   public:
-    explicit Semaphore(int value) : task_(mach_task_self()) {
-      MACH_CALL(semaphore_create(task_, &back_, SYNC_POLICY_FIFO, value));
-    }
-
-    ~Semaphore() {
-      MACH_CALL(semaphore_destroy(task_, back_));
-    }
+    explicit Semaphore(int value) : count_(value) {}
 
     void wait() {
-      MACH_CALL(semaphore_wait(back_));
+      std::unique_lock<std::mutex> lock(mutex_);
+      cv_.wait(lock, [this] { return count_ > 0; });
+      --count_;
     }
 
     void post() {
-      MACH_CALL(semaphore_signal(back_));
+      {
+        std::lock_guard<std::mutex> lock(mutex_);
+        ++count_;
+      }
+      cv_.notify_one();
     }
 
   private:
-    semaphore_t back_;
-    task_t task_;
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    int count_;
 };
 
 inline void WaitSemaphore(Semaphore &semaphore) {
-  semaphore.wait();
-}
-
-#else
-typedef boost::interprocess::interprocess_semaphore Semaphore;
-
-inline void WaitSemaphore (Semaphore &on) {
   while (1) {
     try {
-      on.wait();
+      semaphore.wait();
       break;
     }
-    catch (boost::interprocess::interprocess_exception &e) {
-      if (e.get_native_error() != EINTR) {
-        throw;
-      }
+    catch (const std::exception &) {
+      // retry on any transient issues
     }
   }
 }
-
-#endif // __APPLE__
 
 /**
  * Producer consumer queue safe for multiple producers and multiple consumers.
@@ -79,7 +55,7 @@ inline void WaitSemaphore (Semaphore &on) {
  * so larger objects should be passed via pointer.
  * Strong exception guarantee if operator= throws.  Undefined if semaphores throw.
  */
-template <class T> class PCQueue : boost::noncopyable {
+template <class T> class PCQueue {
  public:
   explicit PCQueue(size_t size)
    : empty_(size), used_(0),
@@ -92,7 +68,7 @@ template <class T> class PCQueue : boost::noncopyable {
   void Produce(const T &val) {
     WaitSemaphore(empty_);
     {
-      boost::unique_lock<boost::mutex> produce_lock(produce_at_mutex_);
+      std::unique_lock<std::mutex> produce_lock(produce_at_mutex_);
       try {
         *produce_at_ = val;
       }
@@ -109,7 +85,7 @@ template <class T> class PCQueue : boost::noncopyable {
   T& Consume(T &out) {
     WaitSemaphore(used_);
     {
-      boost::unique_lock<boost::mutex> consume_lock(consume_at_mutex_);
+      std::unique_lock<std::mutex> consume_lock(consume_at_mutex_);
       try {
         out = *consume_at_;
       }
@@ -132,22 +108,25 @@ template <class T> class PCQueue : boost::noncopyable {
   }
 
  private:
+  PCQueue(const PCQueue &) = delete;
+  PCQueue &operator=(const PCQueue &) = delete;
+
   // Number of empty spaces in storage_.
   Semaphore empty_;
   // Number of occupied spaces in storage_.
   Semaphore used_;
 
-  boost::scoped_array<T> storage_;
+  std::unique_ptr<T[]> storage_;
 
   T *const end_;
 
   // Index for next write in storage_.
   T *produce_at_;
-  boost::mutex produce_at_mutex_;
+  std::mutex produce_at_mutex_;
 
   // Index for next read from storage_.
   T *consume_at_;
-  boost::mutex consume_at_mutex_;
+  std::mutex consume_at_mutex_;
 
 };
 

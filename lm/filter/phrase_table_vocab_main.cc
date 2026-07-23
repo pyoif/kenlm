@@ -6,8 +6,8 @@
 #include "../../util/string_piece_hash.hh"
 #include "../../util/tokenize_piece.hh"
 
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <cstddef>
 #include <vector>
@@ -30,7 +30,7 @@ class InternString {
     const char *Add(StringPiece str) {
       MutablePiece mut;
       mut.behind = str;
-      std::pair<boost::unordered_set<MutablePiece>::iterator, bool> res(strs_.insert(mut));
+      std::pair<std::unordered_set<MutablePiece>::iterator, bool> res(strs_.insert(mut));
       if (res.second) {
         void *mem = backing_.Allocate(str.size() + 1);
         memcpy(mem, str.data(), str.size());
@@ -42,7 +42,7 @@ class InternString {
 
   private:
     util::Pool backing_;
-    boost::unordered_set<MutablePiece> strs_;
+    std::unordered_set<MutablePiece> strs_;
 };
 
 class TargetWords {
@@ -60,7 +60,7 @@ class TargetWords {
         interns_.push_back(intern_.Add(*i));
       }
       for (std::vector<unsigned int>::const_iterator i(sentences.begin()); i != sentences.end(); ++i) {
-        boost::unordered_set<const char *> &vocab = vocab_[*i];
+        std::unordered_set<const char *> &vocab = vocab_[*i];
         for (std::vector<const char *>::const_iterator j = interns_.begin(); j != interns_.end(); ++j) {
           vocab.insert(*j);
         }
@@ -69,8 +69,8 @@ class TargetWords {
 
     void Print() const {
       util::FileStream out(1);
-      for (std::vector<boost::unordered_set<const char *> >::const_iterator i = vocab_.begin(); i != vocab_.end(); ++i) {
-        for (boost::unordered_set<const char *>::const_iterator j = i->begin(); j != i->end(); ++j) {
+      for (std::vector<std::unordered_set<const char *> >::const_iterator i = vocab_.begin(); i != vocab_.end(); ++i) {
+        for (std::unordered_set<const char *>::const_iterator j = i->begin(); j != i->end(); ++j) {
           out << *j << ' ';
         }
         out << '\n';
@@ -80,7 +80,7 @@ class TargetWords {
   private:
     InternString intern_;
 
-    std::vector<boost::unordered_set<const char *> > vocab_;
+    std::vector<std::unordered_set<const char *> > vocab_;
 
     // Temporary in Add.
     std::vector<const char *> interns_;
@@ -121,7 +121,7 @@ class Input {
     const std::size_t max_length_;
 
     // hash of phrase is the key, array of sentences is the value.
-    typedef boost::unordered_map<uint64_t, std::vector<unsigned int> > Map;
+    typedef std::unordered_map<uint64_t, std::vector<unsigned int> > Map;
     Map map_;
 
     std::size_t sentence_id_;

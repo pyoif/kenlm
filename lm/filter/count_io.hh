@@ -11,7 +11,9 @@
 
 namespace lm {
 
-class CountOutput : boost::noncopyable {
+class CountOutput {
+    CountOutput(const CountOutput&) = delete;
+    CountOutput& operator=(const CountOutput&) = delete;
   public:
     explicit CountOutput(const char *name) : file_(util::CreateOrThrow(name)) {}
 

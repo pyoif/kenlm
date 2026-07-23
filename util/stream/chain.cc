@@ -17,7 +17,8 @@ ChainConfigException::ChainConfigException() throw() { *this << "Chain configure
 ChainConfigException::~ChainConfigException() throw() {}
 
 Thread::~Thread() {
-  thread_.join();
+  if (thread_.joinable())
+    thread_.join();
 }
 
 void Thread::UnhandledException(const std::exception &e) {
@@ -47,13 +48,13 @@ Chain::~Chain() {
 
 ChainPosition Chain::Add() {
   if (!Running()) Start();
-  PCQueue<Block> &in = queues_.back();
-  queues_.push_back(new PCQueue<Block>(config_.block_count));
-  return ChainPosition(in, queues_.back(), this, progress_);
+  PCQueue<Block> &in = *queues_.back();
+  queues_.push_back(std::unique_ptr<PCQueue<Block>>(new PCQueue<Block>(config_.block_count)));
+  return ChainPosition(in, *queues_.back(), this, progress_);
 }
 
 Chain &Chain::operator>>(const WriteAndRecycle &writer) {
-  threads_.push_back(new Thread(Complete(), writer));
+  threads_.push_back(std::unique_ptr<Thread>(new Thread(Complete(), writer)));
   return *this;
 }
 
@@ -64,7 +65,7 @@ void Chain::Wait(bool release_memory) {
   }
   if (!complete_called_) CompleteLoop();
   threads_.clear();
-  for (std::size_t i = 0; queues_.front().Consume(); ++i) {
+  for (std::size_t i = 0; queues_.front()->Consume(); ++i) {
     if (i == config_.block_count) {
       std::cerr << "Chain ending without poison." << std::endl;
       abort();
@@ -86,11 +87,11 @@ void Chain::Start() {
     memory_.reset(MallocOrThrow(malloc_size));
   }
   // This queue can accomodate all blocks.
-  queues_.push_back(new PCQueue<Block>(config_.block_count));
+  queues_.push_back(std::unique_ptr<PCQueue<Block>>(new PCQueue<Block>(config_.block_count)));
   // Populate the lead queue with blocks.
   uint8_t *base = static_cast<uint8_t*>(memory_.get());
   for (std::size_t i = 0; i < config_.block_count; ++i) {
-    queues_.front().Produce(Block(base, block_size_));
+    queues_.front()->Produce(Block(base, block_size_));
     base += block_size_;
   }
 }
@@ -99,7 +100,7 @@ ChainPosition Chain::Complete() {
   assert(Running());
   UTIL_THROW_IF(complete_called_, util::Exception, "CompleteLoop() called twice");
   complete_called_ = true;
-  return ChainPosition(queues_.back(), queues_.front(), this, progress_);
+  return ChainPosition(*queues_.back(), *queues_.front(), this, progress_);
 }
 
 Link::Link() : in_(NULL), out_(NULL), poisoned_(true) {}

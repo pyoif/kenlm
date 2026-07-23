@@ -14,12 +14,7 @@ namespace lm {
 namespace ngram {
 namespace {
 
-const char *TestLocation() {
-  if (boost::unit_test::framework::master_test_suite().argc < 2) {
-    return "test.arpa";
-  }
-  return boost::unit_test::framework::master_test_suite().argv[1];
-}
+const char *TestLocation() { return "test.arpa"; }
 
 Config SilentConfig() {
   Config config;

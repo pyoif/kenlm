@@ -143,7 +143,7 @@ class Writer {
     Dedupe dedupe_;
 
     // Small buffer to hold existing ngrams when shifting across a block boundary.
-    boost::scoped_array<WordIndex> buffer_;
+    std::unique_ptr<WordIndex[]> buffer_;
 
     const std::size_t block_size_;
 };

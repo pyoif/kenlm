@@ -33,8 +33,8 @@
 #include "../../util/stream/sort.hh"
 #include "../../util/tokenize_piece.hh"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
+#include <memory>
+#include <unordered_map>
 
 #include <cmath>
 #include <limits>
@@ -176,7 +176,7 @@ class DispatchContext {
 };
 
 // Map from n-gram hash to contexts in the tuning data.  TODO: probing hash table?
-typedef boost::unordered_map<uint64_t, DispatchContext> ContextMap;
+typedef std::unordered_map<uint64_t, DispatchContext> ContextMap;
 
 // Handle all the orders of a single model at once.
 class JointOrderCallback {
@@ -288,7 +288,7 @@ class IdentifyTuning : public EnumerateVocab {
 
     // Apply ids as they come out of MergeVocab if they match.
     void Add(WordIndex id, const StringPiece &str) {
-      boost::unordered_map<uint64_t, std::vector<std::size_t> >::iterator i = words_.find(util::MurmurHashNative(str.data(), str.size()));
+      std::unordered_map<uint64_t, std::vector<std::size_t> >::iterator i = words_.find(util::MurmurHashNative(str.data(), str.size()));
       if (i != words_.end()) {
         for (std::vector<std::size_t>::iterator j = i->second.begin(); j != i->second.end(); ++j) {
           indices_[*j] = id;
@@ -307,7 +307,7 @@ class IdentifyTuning : public EnumerateVocab {
     std::vector<WordIndex> &indices_;
 
     // map from hash(string) to offsets in indices_.
-    boost::unordered_map<uint64_t, std::vector<std::size_t> > words_;
+    std::unordered_map<uint64_t, std::vector<std::size_t> > words_;
 };
 
 } // namespace
@@ -345,7 +345,7 @@ class ExtensionsFirstIteration {
   private:
     class ApplyBackoffs {
       public:
-        explicit ApplyBackoffs(boost::shared_ptr<std::vector<Matrix> > backoffs_by_instance)
+        explicit ApplyBackoffs(std::shared_ptr<std::vector<Matrix> > backoffs_by_instance)
           : backoffs_by_instance_(backoffs_by_instance) {}
 
         void Run(const util::stream::ChainPosition &position) {
@@ -363,14 +363,14 @@ class ExtensionsFirstIteration {
         }
 
       private:
-        boost::shared_ptr<std::vector<Matrix> > backoffs_by_instance_;
+        std::shared_ptr<std::vector<Matrix> > backoffs_by_instance_;
     };
 
     // Array of complete backoff matrices by instance.
     // Each matrix is by model, then by order.
     // Would have liked to use a tensor but it's not that well supported.
     // This is a shared pointer so that ApplyBackoffs can run after this class is gone.
-    boost::shared_ptr<std::vector<Matrix> > backoffs_by_instance_;
+    std::shared_ptr<std::vector<Matrix> > backoffs_by_instance_;
 
     // This sorts and stores all the InitialExtensions.
     util::stream::Sort<InitialExtensionCompare> sort_;
@@ -417,7 +417,7 @@ Instances::Instances(int tune_file, const std::vector<StringPiece> &model_names,
       std::vector<WordIndex> context;
       context.push_back(bos_);
       for (std::size_t i = 0; i < tuning_words.size(); ++i) {
-        instances.push_back(boost::ref(extensions_first_->WriteBackoffs(i)), tuning_words[i]);
+        instances.push_back(std::ref(extensions_first_->WriteBackoffs(i)), tuning_words[i]);
         for (std::size_t j = 0; j < context.size(); ++j) {
           cmap[util::MurmurHashNative(&context[j], sizeof(WordIndex) * (context.size() - j))].Register(instances.back());
         }

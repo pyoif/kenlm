@@ -7,7 +7,7 @@
 #include "../../util/file_stream.hh"
 #include "../../util/file.hh"
 
-#include <boost/lexical_cast.hpp>
+#include <string>
 
 namespace lm { namespace builder {
 // Not defined, only specialized.
@@ -27,7 +27,7 @@ template <class V> class Print {
   public:
     static void DumpSeparateFiles(const VocabReconstitute &vocab, const std::string &file_base, util::stream::Chains &chains) {
       for (unsigned int i = 0; i < chains.size(); ++i) {
-        std::string file(file_base + boost::lexical_cast<std::string>(i));
+        std::string file(file_base + std::to_string(i));
         chains[i] >> Print(vocab, util::CreateOrThrow(file.c_str()));
       }
     }

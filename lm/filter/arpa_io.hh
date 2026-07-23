@@ -8,9 +8,6 @@
 #include "../../util/string_piece.hh"
 #include "../../util/tokenize_piece.hh"
 
-#include <boost/noncopyable.hpp>
-#include <boost/scoped_array.hpp>
-
 #include <fstream>
 #include <string>
 #include <vector>
@@ -36,7 +33,11 @@ size_t SizeNeededForCounts(const std::vector<uint64_t> &number);
  * at the end.  Hence, I just have it own a std::fstream instead of accepting
  * a separately held std::ostream.  TODO: use the fast one from estimation.
  */
-class ARPAOutput : boost::noncopyable {
+class ARPAOutput {
+  public:
+    explicit ARPAOutput(const char *name, size_t buffer_size = 65536);
+    ARPAOutput(const ARPAOutput&) = delete;
+    ARPAOutput& operator=(const ARPAOutput&) = delete;
   public:
     explicit ARPAOutput(const char *name, size_t buffer_size = 65536);
 

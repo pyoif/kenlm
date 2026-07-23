@@ -3,8 +3,6 @@
 
 #include "chain.hh"
 
-#include <boost/noncopyable.hpp>
-
 #include <deque>
 
 namespace util {
@@ -17,13 +15,15 @@ namespace stream {
  * has a limit of 2 * block_size_ - 1 in distance (it does *not* buffer an
  * entire stream into memory, only a maximum of 2 * block_size_).
  */
-class RewindableStream : boost::noncopyable {
+class RewindableStream {
   public:
     /**
      * Creates an uninitialized RewindableStream. You **must** call Init()
      * on it later!
      */
-    RewindableStream();
+    RewindableStream() : in_(NULL), entry_size_(0), block_size_(0), block_count_(0), marked_(NULL), current_(NULL), block_end_(NULL), hit_poison_(false), poisoned_(false) {}
+    RewindableStream(const RewindableStream&) = delete;
+    RewindableStream& operator=(const RewindableStream&) = delete;
 
     ~RewindableStream() {
       Poison();

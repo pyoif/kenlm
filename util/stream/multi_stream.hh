@@ -7,6 +7,9 @@
 #include "stream.hh"
 
 #include <cstddef>
+#include <functional>
+#include <memory>
+#include <vector>
 #include <new>
 
 #include <cassert>
@@ -43,12 +46,12 @@ class Chains : public util::FixedArray<util::stream::Chain> {
     explicit Chains(std::size_t limit) : util::FixedArray<util::stream::Chain>(limit) {}
 
     template <class Worker> typename CheckForRun<Worker>::type &operator>>(const Worker &worker) {
-      threads_.push_back(new util::stream::Thread(ChainPositions(*this), worker));
+      threads_.push_back(std::unique_ptr<util::stream::Thread>(new util::stream::Thread(ChainPositions(*this), worker)));
       return *this;
     }
 
-    template <class Worker> typename CheckForRun<Worker>::type &operator>>(const boost::reference_wrapper<Worker> &worker) {
-      threads_.push_back(new util::stream::Thread(ChainPositions(*this), worker));
+    template <class Worker> typename CheckForRun<Worker>::type &operator>>(const std::reference_wrapper<Worker> &worker) {
+      threads_.push_back(std::unique_ptr<util::stream::Thread>(new util::stream::Thread(ChainPositions(*this), worker)));
       return *this;
     }
 
@@ -66,7 +69,7 @@ class Chains : public util::FixedArray<util::stream::Chain> {
     }
 
   private:
-    boost::ptr_vector<util::stream::Thread> threads_;
+    std::vector<std::unique_ptr<util::stream::Thread>> threads_;
 
     Chains(const Chains &);
     void operator=(const Chains &);

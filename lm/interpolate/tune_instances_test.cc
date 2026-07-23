@@ -21,9 +21,6 @@ TEST_CASE("Toy") {
   util::FileStream(test_input.get()) << "c\n";
 
   std::string dir("../common/test_data");
-  if (boost::unit_test::framework::master_test_suite().argc == 2) {
-    dir = boost::unit_test::framework::master_test_suite().argv[1];
-  }
 
 #if BYTE_ORDER == LITTLE_ENDIAN
   std::string endian = "little";

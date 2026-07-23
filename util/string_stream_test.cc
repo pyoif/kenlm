@@ -1,10 +1,7 @@
-#define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include "string_stream.hh"
 #include <doctest/doctest.h>
-#include <boost/lexical_cast.hpp>
-
 #include <cstddef>
 #include <limits>
 
@@ -13,7 +10,7 @@ namespace util { namespace {
 template <class T> void TestEqual(const T value) {
   StringStream strme;
   strme << value;
-  CHECK_EQ(boost::lexical_cast<std::string>(value), strme.str());
+  CHECK_EQ(std::to_string(value), strme.str());
 }
 
 template <class T> void TestCorners() {

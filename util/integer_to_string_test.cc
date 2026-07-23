@@ -4,7 +4,7 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-#include <boost/lexical_cast.hpp>
+#include <string>
 
 #include <limits>
 
@@ -16,7 +16,7 @@ template <class T> void TestValue(const T value) {
   StringPiece result(buf, ToString(value, buf) - buf);
   BOOST_REQUIRE_GE(static_cast<std::size_t>(ToStringBuf<T>::kBytes), result.size());
   if (value) {
-    CHECK_EQ(boost::lexical_cast<std::string>(value), result);
+    CHECK_EQ(std::to_string(value), result);
   } else {
     // Platforms can do void * as 0x0 or 0.
     CHECK(result == "0x0" || result == "0");

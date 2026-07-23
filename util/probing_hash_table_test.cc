@@ -5,8 +5,8 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-#include <boost/scoped_array.hpp>
-#include <boost/functional/hash.hpp>
+#include <memory>
+#include <functional>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -34,11 +34,11 @@ struct Entry {
   uint64_t value;
 };
 
-typedef ProbingHashTable<Entry, boost::hash<unsigned char> > Table;
+typedef ProbingHashTable<Entry, std::hash<unsigned char> > Table;
 
 TEST_CASE("simple") {
   size_t size = Table::Size(10, 1.2);
-  boost::scoped_array<char> mem(new char[size]);
+  std::unique_ptr<char[]> mem(new char[size]);
   memset(mem.get(), 0, size);
 
   Table table(mem.get(), size);

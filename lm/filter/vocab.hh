@@ -8,21 +8,20 @@
 #include "../../util/string_piece_hash.hh"
 #include "../../util/tokenize_piece.hh"
 
-#include <boost/noncopyable.hpp>
-#include <boost/range/iterator_range.hpp>
-#include <boost/unordered/unordered_map.hpp>
-#include <boost/unordered/unordered_set.hpp>
+#include "../../util/range.hh"
 
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace lm {
 namespace vocab {
 
-void ReadSingle(std::istream &in, boost::unordered_set<std::string> &out);
+void ReadSingle(std::istream &in, std::unordered_set<std::string> &out);
 
 // Read one sentence vocabulary per line.  Return the number of sentences.
-unsigned int ReadMultiple(std::istream &in, boost::unordered_map<std::string, std::vector<unsigned int> > &out);
+unsigned int ReadMultiple(std::istream &in, std::unordered_map<std::string, std::vector<unsigned int> > &out);
 
 /* Is this a special tag like <s> or <UNK>?  This actually includes anything
  * surrounded with < and >, which most tokenizers separate for real words, so
@@ -36,7 +35,7 @@ inline bool IsTag(const StringPiece &value) {
 
 class Single {
   public:
-    typedef boost::unordered_set<std::string> Words;
+    typedef std::unordered_set<std::string> Words;
 
     explicit Single(const Words &vocab) : vocab_(vocab) {}
 
@@ -54,7 +53,7 @@ class Single {
 
 class Union {
   public:
-    typedef boost::unordered_map<std::string, std::vector<unsigned int> > Words;
+    typedef std::unordered_map<std::string, std::vector<unsigned int> > Words;
 
     explicit Union(const Words &vocabs) : vocabs_(vocabs) {}
 
@@ -65,7 +64,7 @@ class Union {
         if (IsTag(*i)) continue;
         Words::const_iterator found(FindStringPiece(vocabs_, *i));
         if (vocabs_.end() == found) return false;
-        sets_.push_back(boost::iterator_range<const unsigned int*>(&*found->second.begin(), &*found->second.end()));
+        sets_.push_back(util::Range<const unsigned int*>(&*found->second.begin(), &*found->second.end()));
       }
       return (sets_.empty() || util::FirstIntersection(sets_));
     }
@@ -73,12 +72,12 @@ class Union {
   private:
     const Words &vocabs_;
 
-    std::vector<boost::iterator_range<const unsigned int*> > sets_;
+    std::vector<util::Range<const unsigned int*> > sets_;
 };
 
 class Multiple {
   public:
-    typedef boost::unordered_map<std::string, std::vector<unsigned int> > Words;
+    typedef std::unordered_map<std::string, std::vector<unsigned int> > Words;
 
     Multiple(const Words &vocabs) : vocabs_(vocabs) {}
 
@@ -104,7 +103,7 @@ class Multiple {
         if (IsTag(*i)) continue;
         Words::const_iterator found(FindStringPiece(vocabs_, *i));
         if (vocabs_.end() == found) return;
-        sets_.push_back(boost::iterator_range<const unsigned int*>(&*found->second.begin(), &*found->second.end()));
+        sets_.push_back(util::Range<const unsigned int*>(&*found->second.begin(), &*found->second.end()));
       }
       if (sets_.empty()) {
         output.AddNGram(line);
@@ -124,7 +123,7 @@ class Multiple {
   private:
     const Words &vocabs_;
 
-    std::vector<boost::iterator_range<const unsigned int*> > sets_;
+    std::vector<util::Range<const unsigned int*> > sets_;
 };
 
 } // namespace vocab

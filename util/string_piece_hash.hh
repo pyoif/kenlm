@@ -5,15 +5,18 @@
 #include "have.hh"
 #include "string_piece.hh"
 
-#include <boost/functional/hash.hpp>
-#include <boost/version.hpp>
-
 #ifdef HAVE_ICU
 U_NAMESPACE_BEGIN
 #endif
 
 inline size_t hash_value(const StringPiece &str) {
-  return boost::hash_range(str.data(), str.data() + str.length());
+  // FNV-1a hash over byte range
+  size_t h = 14695981039346656037ULL;
+  for (const char *p = str.data(), *end_p = p + str.length(); p != end_p; ++p) {
+    h ^= static_cast<size_t>(static_cast<unsigned char>(*p));
+    h *= 1099511628211ULL;
+  }
+  return h;
 }
 
 #ifdef HAVE_ICU
@@ -33,21 +36,11 @@ struct StringPieceCompatibleEquals {
   }
 };
 template <class T> typename T::const_iterator FindStringPiece(const T &t, const StringPiece &key) {
-#if BOOST_VERSION < 104200
-  std::string temp(key.data(), key.size());
-  return t.find(temp);
-#else
   return t.find(key, StringPieceCompatibleHash(), StringPieceCompatibleEquals());
-#endif
 }
 
 template <class T> typename T::iterator FindStringPiece(T &t, const StringPiece &key) {
-#if BOOST_VERSION < 104200
-  std::string temp(key.data(), key.size());
-  return t.find(temp);
-#else
   return t.find(key, StringPieceCompatibleHash(), StringPieceCompatibleEquals());
-#endif
 }
 
 #endif // UTIL_STRING_PIECE_HASH_H

@@ -3,25 +3,25 @@
 
 #include "pcqueue.hh"
 
-#include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/optional.hpp>
-#include <boost/thread.hpp>
-
+#include <functional>
 #include <iostream>
+#include <memory>
+#include <thread>
+#include <vector>
 #include <cstdlib>
 
 namespace util {
 
-template <class HandlerT> class Worker : boost::noncopyable {
+template <class HandlerT> class Worker {
   public:
     typedef HandlerT Handler;
     typedef typename Handler::Request Request;
 
     template <class Construct> Worker(PCQueue<Request> &in, Construct &construct, const Request &poison)
-      : in_(in), handler_(construct), poison_(poison), thread_(boost::ref(*this)) {}
+      : in_(in), handler_(new Handler(construct)), poison_(poison), thread_(&Worker::Run, this) {}
 
     // Only call from thread.
-    void operator()() {
+    void Run() {
       Request request;
       while (1) {
         in_.Consume(request);
@@ -41,27 +41,31 @@ template <class HandlerT> class Worker : boost::noncopyable {
     }
 
     void Join() {
-      thread_.join();
+      if (thread_.joinable())
+        thread_.join();
     }
 
   private:
+    Worker(const Worker &) = delete;
+    Worker &operator=(const Worker &) = delete;
+
     PCQueue<Request> &in_;
 
-    boost::optional<Handler> handler_;
+    std::unique_ptr<Handler> handler_;
 
     const Request poison_;
 
-    boost::thread thread_;
+    std::thread thread_;
 };
 
-template <class HandlerT> class ThreadPool : boost::noncopyable {
+template <class HandlerT> class ThreadPool {
   public:
     typedef HandlerT Handler;
     typedef typename Handler::Request Request;
 
     template <class Construct> ThreadPool(std::size_t queue_length, std::size_t workers, Construct handler_construct, Request poison) : in_(queue_length), poison_(poison) {
       for (size_t i = 0; i < workers; ++i) {
-        workers_.push_back(new Worker<Handler>(in_, handler_construct, poison));
+        workers_.push_back(std::unique_ptr<Worker<Handler>>(new Worker<Handler>(in_, handler_construct, poison)));
       }
     }
 
@@ -69,8 +73,8 @@ template <class HandlerT> class ThreadPool : boost::noncopyable {
       for (std::size_t i = 0; i < workers_.size(); ++i) {
         Produce(poison_);
       }
-      for (typename boost::ptr_vector<Worker<Handler> >::iterator i = workers_.begin(); i != workers_.end(); ++i) {
-        i->Join();
+      for (auto i = workers_.begin(); i != workers_.end(); ++i) {
+        (*i)->Join();
       }
     }
 
@@ -82,9 +86,12 @@ template <class HandlerT> class ThreadPool : boost::noncopyable {
     PCQueue<Request> &In() { return in_; }
 
   private:
+    ThreadPool(const ThreadPool &) = delete;
+    ThreadPool &operator=(const ThreadPool &) = delete;
+
     PCQueue<Request> in_;
 
-    boost::ptr_vector<Worker<Handler> > workers_;
+    std::vector<std::unique_ptr<Worker<Handler>>> workers_;
 
     Request poison_;
 };
@@ -106,7 +113,7 @@ template <class Handler> class RecyclingHandler {
     PCQueue<Request> &recycling_;
 };
 
-template <class HandlerT> class RecyclingThreadPool : boost::noncopyable {
+template <class HandlerT> class RecyclingThreadPool {
   public:
     typedef HandlerT Handler;
     typedef typename Handler::Request Request;
@@ -131,6 +138,9 @@ template <class HandlerT> class RecyclingThreadPool : boost::noncopyable {
     }
     
   private:
+    RecyclingThreadPool(const RecyclingThreadPool &) = delete;
+    RecyclingThreadPool &operator=(const RecyclingThreadPool &) = delete;
+
     PCQueue<Request> recycling_;
     ThreadPool<RecyclingHandler<Handler> > pool_;
 };

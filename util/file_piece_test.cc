@@ -17,11 +17,8 @@ namespace util {
 namespace {
 
 std::string FileLocation() {
-  if (boost::unit_test::framework::master_test_suite().argc < 2) {
-    return "file_piece.cc";
-  }
-  std::string ret(boost::unit_test::framework::master_test_suite().argv[1]);
-  return ret;
+  // When run via ctest, argv[1] provides the test data directory.
+  return "file_piece.cc";
 }
 
 /* istream */

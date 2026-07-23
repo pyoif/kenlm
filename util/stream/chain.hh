@@ -6,8 +6,9 @@
 #include "multi_progress.hh"
 #include "../scoped.hh"
 
-#include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/thread/thread.hpp>
+#include <memory>
+#include <thread>
+#include <vector>
 
 #include <cstddef>
 #include <cassert>
@@ -63,8 +64,14 @@ class Thread {
      *
      * After a call to this constructor, the provided worker will be running within a boost thread owned by the newly constructed Thread object.
      */
-    template <class Position, class Worker> Thread(const Position &position, const Worker &worker)
-      : thread_(boost::ref(*this), position, worker) {}
+    template <class Position, class Worker> Thread(const Position &position, Worker worker)
+      : thread_(&Thread::Run<Position, Worker>, this, position, worker) {}
+
+  private:
+    template <class Position, class Worker> static void Run(Thread *self, Position position, Worker worker) {
+      (*self)(position, worker);
+    }
+  public:
 
     ~Thread();
 
@@ -84,7 +91,7 @@ class Thread {
   private:
     void UnhandledException(const std::exception &e);
 
-    boost::thread thread_;
+    std::thread thread_;
 };
 
 /**
@@ -177,7 +184,7 @@ class Chain {
      */
     template <class Worker> typename CheckForRun<Worker>::type &operator>>(const Worker &worker) {
       assert(!complete_called_);
-      threads_.push_back(new Thread(Add(), worker));
+      threads_.push_back(std::unique_ptr<Thread>(new Thread(Add(), worker)));
       return *this;
     }
 
@@ -189,9 +196,9 @@ class Chain {
    *
    * @see Thread::operator()()
    */
-    template <class Worker> typename CheckForRun<Worker>::type &operator>>(const boost::reference_wrapper<Worker> &worker) {
+    template <class Worker> typename CheckForRun<Worker>::type &operator>>(const std::reference_wrapper<Worker> &worker) {
       assert(!complete_called_);
-      threads_.push_back(new Thread(Add(), worker));
+      threads_.push_back(std::unique_ptr<Thread>(new Thread(Add(), worker)));
       return *this;
     }
 
@@ -199,7 +206,7 @@ class Chain {
 
     // To complete the loop, call CompleteLoop(), >> kRecycle, or the destructor.
     void CompleteLoop() {
-      threads_.push_back(new Thread(Complete(), kRecycle));
+      threads_.push_back(std::unique_ptr<Thread>(new Thread(Complete(), kRecycle)));
     }
 
     /**
@@ -234,11 +241,11 @@ class Chain {
 
     scoped_malloc memory_;
 
-    boost::ptr_vector<PCQueue<Block> > queues_;
+    std::vector<std::unique_ptr<PCQueue<Block>>> queues_;
 
     bool complete_called_;
 
-    boost::ptr_vector<Thread> threads_;
+    std::vector<std::unique_ptr<Thread>> threads_;
 
     MultiProgress progress_;
 };

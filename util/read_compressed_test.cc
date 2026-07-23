@@ -5,7 +5,7 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-#include <boost/scoped_ptr.hpp>
+#include <memory>
 
 #include <fstream>
 #include <string>

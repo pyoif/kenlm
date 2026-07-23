@@ -8,7 +8,7 @@
 namespace lm {
 namespace vocab {
 
-void ReadSingle(std::istream &in, boost::unordered_set<std::string> &out) {
+void ReadSingle(std::istream &in, std::unordered_set<std::string> &out) {
   in.exceptions(std::istream::badbit);
   std::string word;
   while (in >> word) {
@@ -31,7 +31,7 @@ bool IsLineEnd(std::istream &in) {
 
 // Read space separated words in enter separated lines.  These lines can be
 // very long, so don't read an entire line at a time.
-unsigned int ReadMultiple(std::istream &in, boost::unordered_map<std::string, std::vector<unsigned int> > &out) {
+unsigned int ReadMultiple(std::istream &in, std::unordered_map<std::string, std::vector<unsigned int> > &out) {
   in.exceptions(std::istream::badbit);
   unsigned int sentence = 0;
   bool used_id = false;

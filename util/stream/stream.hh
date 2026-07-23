@@ -3,17 +3,17 @@
 
 #include "chain.hh"
 
-#include <boost/noncopyable.hpp>
-
 #include <cassert>
 #include <stdint.h>
 
 namespace util {
 namespace stream {
 
-class Stream : boost::noncopyable {
+class Stream {
   public:
     Stream() : current_(NULL), end_(NULL) {}
+    Stream(const Stream&) = delete;
+    Stream& operator=(const Stream&) = delete;
 
     void Init(const ChainPosition &position) {
       entry_size_ = position.GetChain().EntrySize();

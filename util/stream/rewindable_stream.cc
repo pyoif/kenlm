@@ -5,12 +5,6 @@
 
 namespace util {
 namespace stream {
-
-RewindableStream::RewindableStream()
-    : current_(NULL), in_(NULL), out_(NULL), poisoned_(true) {
-  // nothing
-}
-
 void RewindableStream::Init(const ChainPosition &position) {
   UTIL_THROW_IF2(in_, "RewindableStream::Init twice");
   in_ = position.in_;

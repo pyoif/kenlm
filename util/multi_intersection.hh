@@ -1,11 +1,11 @@
 #ifndef UTIL_MULTI_INTERSECTION_H
 #define UTIL_MULTI_INTERSECTION_H
 
-#include <boost/optional.hpp>
-#include <boost/range/iterator_range.hpp>
+#include "range.hh"
 
 #include <algorithm>
 #include <functional>
+#include <optional>
 #include <vector>
 
 namespace util {
@@ -17,25 +17,25 @@ template <class Range> struct RangeLessBySize {
   }
 };
 
-/* Takes sets specified by their iterators and a boost::optional containing
+/* Takes sets specified by their iterators and a std::optional containing
  * the lowest intersection if any.  Each set must be sorted in increasing
  * order.  sets is changed to truncate the beginning of each sequence to the
  * location of the match or an empty set.  Precondition: sets is not empty
  * since the intersection over null is the universe and this function does not
  * know the universe.
  */
-template <class Iterator, class Less> boost::optional<typename std::iterator_traits<Iterator>::value_type> FirstIntersectionSorted(std::vector<boost::iterator_range<Iterator> > &sets, const Less &less = std::less<typename std::iterator_traits<Iterator>::value_type>()) {
-  typedef std::vector<boost::iterator_range<Iterator> > Sets;
+template <class Iterator, class Less> std::optional<typename std::iterator_traits<Iterator>::value_type> FirstIntersectionSorted(std::vector<util::Range<Iterator> > &sets, const Less &less = std::less<typename std::iterator_traits<Iterator>::value_type>()) {
+  typedef std::vector<util::Range<Iterator> > Sets;
   typedef typename std::iterator_traits<Iterator>::value_type Value;
 
   assert(!sets.empty());
 
-  if (sets.front().empty()) return boost::optional<Value>();
+  if (sets.front().empty()) return std::nullopt;
   // Possibly suboptimal to copy for general Value; makes unsigned int go slightly faster.
   Value highest(sets.front().front());
   for (typename Sets::iterator i(sets.begin()); i != sets.end(); ) {
     i->advance_begin(std::lower_bound(i->begin(), i->end(), highest, less) - i->begin());
-    if (i->empty()) return boost::optional<Value>();
+    if (i->empty()) return std::nullopt;
     if (less(highest, i->front())) {
       highest = i->front();
       // start over
@@ -44,34 +44,33 @@ template <class Iterator, class Less> boost::optional<typename std::iterator_tra
       ++i;
     }
   }
-  return boost::optional<Value>(highest);
+  return highest;
 }
 
 } // namespace detail
 
-template <class Iterator, class Less> boost::optional<typename std::iterator_traits<Iterator>::value_type> FirstIntersection(std::vector<boost::iterator_range<Iterator> > &sets, const Less less) {
+template <class Iterator, class Less> std::optional<typename std::iterator_traits<Iterator>::value_type> FirstIntersection(std::vector<util::Range<Iterator> > &sets, const Less less) {
   assert(!sets.empty());
 
-  std::sort(sets.begin(), sets.end(), detail::RangeLessBySize<boost::iterator_range<Iterator> >());
+  std::sort(sets.begin(), sets.end(), detail::RangeLessBySize<util::Range<Iterator> >());
   return detail::FirstIntersectionSorted(sets, less);
 }
 
-template <class Iterator> boost::optional<typename std::iterator_traits<Iterator>::value_type> FirstIntersection(std::vector<boost::iterator_range<Iterator> > &sets) {
+template <class Iterator> std::optional<typename std::iterator_traits<Iterator>::value_type> FirstIntersection(std::vector<util::Range<Iterator> > &sets) {
   return FirstIntersection(sets, std::less<typename std::iterator_traits<Iterator>::value_type>());
 }
 
-template <class Iterator, class Output, class Less> void AllIntersection(std::vector<boost::iterator_range<Iterator> > &sets, Output &out, const Less less) {
+template <class Iterator, class Output, class Less> void AllIntersection(std::vector<util::Range<Iterator> > &sets, Output &out, const Less less) {
   typedef typename std::iterator_traits<Iterator>::value_type Value;
   assert(!sets.empty());
 
-  std::sort(sets.begin(), sets.end(), detail::RangeLessBySize<boost::iterator_range<Iterator> >());
-  boost::optional<Value> ret;
-  for (boost::optional<Value> ret; (ret = detail::FirstIntersectionSorted(sets, less)); sets.front().advance_begin(1)) {
+  std::sort(sets.begin(), sets.end(), detail::RangeLessBySize<util::Range<Iterator> >());
+  for (std::optional<Value> ret; (ret = detail::FirstIntersectionSorted(sets, less)); sets.front().advance_begin(1)) {
     out(*ret);
   }
 }
 
-template <class Iterator, class Output> void AllIntersection(std::vector<boost::iterator_range<Iterator> > &sets, Output &out) {
+template <class Iterator, class Output> void AllIntersection(std::vector<util::Range<Iterator> > &sets, Output &out) {
   AllIntersection(sets, out, std::less<typename std::iterator_traits<Iterator>::value_type>());
 }
 
