@@ -50,8 +50,10 @@ template <> void TestValue<const void*>(const void* value) {
     for (char &c : got_norm) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     if (got_norm.size() >= 2 && got_norm[0] == '0' && got_norm[1] == 'x')
       got_norm = got_norm.substr(2);
+    if (expected_norm.size() >= 2 && expected_norm[0] == '0' && expected_norm[1] == 'x')
+      expected_norm = expected_norm.substr(2);
     size_t pos = expected_norm.find_first_not_of('0');
-    if (pos != std::string::npos)
+    if (pos != std::string::npos && pos != expected_norm.size())
       expected_norm = expected_norm.substr(pos);
     CHECK(expected_norm == got_norm);
   } else {
