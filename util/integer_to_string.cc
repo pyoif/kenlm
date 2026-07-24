@@ -616,7 +616,7 @@ char *ToString(int32_t value, char *to) {
   uint32_t un = static_cast<uint32_t>(value);
   if (value < 0) {
     *to++ = '-';
-    un = -un;
+    un = 0 - un;
   }
   return ToString(un, to);
 }
@@ -625,7 +625,7 @@ char *ToString(int64_t value, char *to) {
   uint64_t un = static_cast<uint64_t>(value);
   if (value < 0) {
     *to++ = '-';
-    un = -un;
+    un = 0 - un;
   }
   return ToString(un, to);
 }

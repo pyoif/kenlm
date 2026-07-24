@@ -448,7 +448,7 @@ void PopulateUnigramWeights(FILE *file, WordIndex unigram_count, RecordReader &c
         ++contexts;
       }
     }
-  } catch (util::Exception &e) {
+  } catch (util::Exception &) {
     e << " while re-reading unigram probabilities";
     throw;
   }
@@ -494,7 +494,7 @@ template <class Quant, class Bhiksha> void BuildTrie(SortedFiles &files, std::ve
     inputs[i-2].Rewind();
   }
   if (Quant::kTrain) {
-    util::ErsatzProgress progress(std::accumulate(counts.begin() + 1, counts.end(), 0),
+    util::ErsatzProgress progress(std::accumulate(counts.begin() + 1, counts.end(), uint64_t{0}),
                                   config.ProgressMessages(), "Quantizing");
     for (unsigned char i = 2; i < counts.size(); ++i) {
       TrainQuantizer(i, counts[i-1], sri.Values(i), inputs[i-2], progress, quant);

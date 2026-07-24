@@ -89,7 +89,7 @@ bool IsBinaryFormat(int fd) {
   util::scoped_memory memory;
   try {
     util::MapRead(util::LAZY, fd, 0, sizeof(Sanity), memory);
-  } catch (const util::Exception &e) {
+  } catch (const util::Exception &) {
     return false;
   }
   Sanity reference_header = Sanity();

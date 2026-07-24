@@ -101,7 +101,7 @@ StringPiece FilePiece::ReadLine(char delim, bool strip_cr) {
 bool FilePiece::ReadLineOrEOF(StringPiece &to, char delim, bool strip_cr) {
   try {
     to = ReadLine(delim, strip_cr);
-  } catch (const util::EndOfFileException &e) { return false; }
+  } catch (const util::EndOfFileException &) { return false; }
   return true;
 }
 

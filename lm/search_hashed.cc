@@ -284,7 +284,7 @@ template <class Value> template <class Build> void HashedSearch<Value>::ApplyBui
       ReadNGrams<Build, ActivateUnigram<typename Value::Weights>, Longest>(
           f, counts.size(), counts[counts.size() - 1], vocab, build, unigram_.Raw(), middle_, ActivateUnigram<typename Value::Weights>(unigram_.Raw()), longest_, warn);
     }
-  } catch (util::ProbingSizeException &e) {
+  } catch (util::ProbingSizeException &) {
     UTIL_THROW(util::ProbingSizeException, "Avoid pruning n-grams like \"bar baz quux\" when \"foo bar baz quux\" is still in the model.  KenLM will work when this pruning happens, but the probing model assumes these events are rare enough that using blank space in the probing hash table will cover all of them.  Increase probing_multiplier (-p to build_binary) to add more blank spaces.\n");
   }
   ReadEnd(f);
