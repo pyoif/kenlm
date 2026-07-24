@@ -448,7 +448,7 @@ void PopulateUnigramWeights(FILE *file, WordIndex unigram_count, RecordReader &c
         ++contexts;
       }
     }
-  } catch (util::Exception &) {
+  } catch (util::Exception &e) {
     e << " while re-reading unigram probabilities";
     throw;
   }
