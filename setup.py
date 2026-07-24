@@ -92,6 +92,13 @@ class build_ext(_build_ext):
             build_args += ["--", "/m"]
         else:
             cmake_args += ["-DCMAKE_BUILD_TYPE=" + cfg]
+            if platform.system() == "Darwin":
+                archflags = os.environ.get("ARCHFLAGS", "")
+                if archflags:
+                    # cibuildwheel sets ARCHFLAGS for universal2: "-arch x86_64 -arch arm64"
+                    archs = [a.split()[-1] for a in archflags.split("-arch ") if a.strip()]
+                    if len(archs) > 1:
+                        cmake_args += ["-DCMAKE_OSX_ARCHITECTURES=" + ";".join(archs)]
             build_args += ["--", "-j4"]
 
         env = os.environ.copy()
