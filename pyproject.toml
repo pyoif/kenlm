@@ -6,14 +6,17 @@ name = "kenlm-ex"
 version = "0.2.1"
 description = "KenLM: Faster and Smaller Language Model Queries"
 readme = "README.md"
-license = { text = "LGPL-2.1-or-later" }
+license = "LGPL-2.1-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.8"
 authors = [{ name = "Kenneth Heafield" }]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
     "Programming Language :: Python :: 3",
     "Programming Language :: C++",
     "Topic :: Text Processing :: Linguistic",
 ]
+
+[tool.setuptools]
+packages = []
