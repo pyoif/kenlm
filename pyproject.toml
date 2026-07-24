@@ -2,8 +2,8 @@
 requires = ["setuptools", "wheel", "cmake>=3.28"]
 
 [project]
-name = "kenlm"
-version = "0.2.0"
+name = "kenlm-ex"
+version = "0.2.1"
 description = "KenLM: Faster and Smaller Language Model Queries"
 readme = "README.md"
 license = { text = "LGPL-2.1-or-later" }

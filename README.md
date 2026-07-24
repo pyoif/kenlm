@@ -1,4 +1,6 @@
-# kenlm
+# kenlm-ex
+
+Fork of kenlm — prebuilt wheels, C++17, no Boost dependency.
 
 Language model inference code by Kenneth Heafield (kenlm at kheafield.com)
 
@@ -81,15 +83,17 @@ Hideo Okuma and Tomoyuki Yoshimura from NICT contributed ports to ARM and MinGW.
 Contributions to KenLM are welcome.  Please base your contributions on https://github.com/kpu/kenlm and send pull requests (or I might give you commit access).  Downstream copies in Moses and cdec are maintained by overwriting them so do not make changes there.  
 
 ## Python module
-Contributed by Victor Chahuneau.
+Contributed by Victor Chahuneau. Fork maintained at https://github.com/pyoif/kenlm.
 
 ### Installation
 
 ```bash
-pip install https://github.com/kpu/kenlm/archive/master.zip
+pip install kenlm-ex
 ```
 
-When installing pip, the `MAX_ORDER` environment variable controls the max order with which KenLM was built.
+Prebuilt wheels for Linux, macOS (x86_64, arm64), and Windows.
+
+When building from source, the `MAX_ORDER` environment variable controls the max order with which KenLM was built.
 
 ### Basic Usage
 ```python
